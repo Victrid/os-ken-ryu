@@ -27,7 +27,7 @@ from os_ken.lib import ip
 # We don't bother to use cfg.py because monkey patch needs to be
 # called very early. Instead, we use an environment variable to
 # select the type of hub.
-HUB_TYPE = os.getenv('OSKEN_HUB_TYPE', 'eventlet')
+HUB_TYPE = os.getenv('OSKEN_HUB_TYPE', 'native')
 
 LOG = logging.getLogger('os_ken.lib.hub')
 
@@ -249,11 +249,12 @@ if HUB_TYPE == 'eventlet':
     HubEvent = eventlet.event.Event
 
 elif HUB_TYPE == 'native':
-    LOG.warning("The native implementation is incomplete "
-                "and should not be used in production environments.")
     import threading
     import queue
     import time
+
+    def patch(thread=True):
+        pass
 
     class HubThread(threading.Thread):
         def wait(self, timeout=None):
