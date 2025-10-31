@@ -274,6 +274,9 @@ elif HUB_TYPE == 'native':
                 LOG.error('HubThread uncaught exception: %s',
                           traceback.format_exc())
 
+        def cancel(self):
+            pass
+
     def spawn(func, *args, **kwargs):
         thread = HubThread(func, args, kwargs)
         thread.start()
