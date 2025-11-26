@@ -64,13 +64,13 @@ API Reference
 =============
 
 ryu.lib.ovs.vsctl
------------------
+--------------------
 
 .. automodule:: ryu.lib.ovs.vsctl
     :members:
 
 ryu.lib.ovs.bridge
-------------------
+---------------------
 
 .. automodule:: ryu.lib.ovs.bridge
     :members:

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # Copyright (C) 2013 Nippon Telegraph and Telephone Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,10 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import print_function
-
 import unittest
-from nose.tools import ok_, eq_, timed, nottest
 
 from subprocess import Popen, PIPE, STDOUT
 import time
@@ -26,10 +23,10 @@ from mininet.net import Mininet
 from mininet.node import RemoteController, OVSKernelSwitch
 
 TIMEOUT = 60
-RYU_HOST = '127.0.0.1'
-RYU_PORT = 6633
+OSKEN_HOST = '127.0.0.1'
+OSKEN_PORT = 6633
 PYTHON_BIN = '.venv/bin/python'
-RYU_MGR = './bin/ryu-manager'
+OSKEN_MGR = 'osken-manager'
 
 
 class OVS12KernelSwitch(OVSKernelSwitch):
@@ -46,7 +43,7 @@ class TestWithOVS12(unittest.TestCase):
     def setUpClass(cls):
         cls.mn = Mininet()
         c = cls.mn.addController(controller=RemoteController,
-                                 ip=RYU_HOST, port=RYU_PORT)
+                                 ip=OSKEN_HOST, port=OSKEN_PORT)
         c.start()
 
         s1 = cls.mn.addSwitch('s1', cls=OVS12KernelSwitch)
@@ -61,51 +58,41 @@ class TestWithOVS12(unittest.TestCase):
     def tearDownClass(cls):
         cls.mn.stop()
 
-    @timed(TIMEOUT)
     def test_add_flow_v10(self):
         app = 'ryu/tests/integrated/test_add_flow_v10.py'
         self._run_ryu_manager_and_check_output(app)
 
-    @timed(TIMEOUT)
     def test_request_reply_v12(self):
         app = 'ryu/tests/integrated/test_request_reply_v12.py'
         self._run_ryu_manager_and_check_output(app)
 
-    @timed(TIMEOUT)
     def test_add_flow_v12_actions(self):
         app = 'ryu/tests/integrated/test_add_flow_v12_actions.py'
         self._run_ryu_manager_and_check_output(app)
 
-    @timed(TIMEOUT)
     def test_add_flow_v12_matches(self):
         app = 'ryu/tests/integrated/test_add_flow_v12_matches.py'
         self._run_ryu_manager_and_check_output(app)
 
-    @nottest
     def test_of_config(self):
-        # OVS 1.10 does not support of_config
-        pass
+        self.skipTest('OVS 1.10 does not support of_config')
 
     def _run_ryu_manager_and_check_output(self, app):
-        cmd = [PYTHON_BIN, RYU_MGR, app]
+        cmd = [PYTHON_BIN, OSKEN_MGR, app]
         p = Popen(cmd, stdout=PIPE, stderr=STDOUT)
 
         while True:
             if p.poll() is not None:
-                raise Exception('Another ryu-manager already running?')
+                raise Exception('Another osken-manager already running?')
 
             line = p.stdout.readline().strip()
             if line == '':
                 time.sleep(1)
                 continue
 
-            print("ryu-manager: %s" % line)
+            print("osken-manager: %s" % line)
             if line.find('TEST_FINISHED') != -1:
-                ok_(line.find('Completed=[True]') != -1)
+                self.assertTrue(line.find('Completed=[True]') != -1)
                 p.terminate()
                 p.communicate()  # wait for subprocess is terminated
                 break
-
-
-if __name__ == '__main__':
-    unittest.main()

@@ -5,7 +5,7 @@ BGP speaker library
 Introduction
 ============
 
-Ryu BGP speaker library helps you to enable your code to speak BGP
+OS-Ken BGP speaker library helps you to enable your code to speak BGP
 protocol. The library supports IPv4, IPv4 MPLS-labeled VPN, IPv6
 MPLS-labeled VPN and L2VPN EVPN address families.
 
@@ -47,8 +47,8 @@ instance advertizes some prefixes.
                              peer_down_handler=detect_peer_down)
 
         speaker.neighbor_add('192.168.177.32', 64513)
-	# uncomment the below line if the speaker needs to talk with a bmp server.
-	# speaker.bmp_server_add('192.168.177.2', 11019)
+    # uncomment the below line if the speaker needs to talk with a bmp server.
+    # speaker.bmp_server_add('192.168.177.2', 11019)
         count = 1
         while True:
             eventlet.sleep(30)

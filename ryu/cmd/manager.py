@@ -29,8 +29,8 @@ from ryu import log
 log.early_init_log(logging.DEBUG)
 
 from ryu import flags
-from ryu import version
-from ryu.app import wsgi
+#from ryu import version
+version = "final"
 from ryu.base.app_manager import AppManager
 from ryu.controller import controller
 from ryu.topology import switches
@@ -99,11 +99,6 @@ def main(args=None, prog=None):
     contexts = app_mgr.create_contexts()
     services = []
     services.extend(app_mgr.instantiate_apps(**contexts))
-
-    webapp = wsgi.start_service(app_mgr)
-    if webapp:
-        thr = hub.spawn(webapp)
-        services.append(thr)
 
     try:
         hub.joinall(services)

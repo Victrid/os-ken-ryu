@@ -21,8 +21,9 @@ import numbers
 from ryu.base import app_manager
 
 from ryu.controller import ofp_event
-from ryu.controller.handler import CONFIG_DISPATCHER, MAIN_DISPATCHER,\
-    DEAD_DISPATCHER
+from ryu.controller.handler import CONFIG_DISPATCHER
+from ryu.controller.handler import DEAD_DISPATCHER
+from ryu.controller.handler import MAIN_DISPATCHER
 from ryu.controller.handler import set_ev_cls
 
 from . import event

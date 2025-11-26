@@ -1,12 +1,9 @@
-#! /usr/bin/env python
-
-from __future__ import print_function
+#! /usr/bin/env python3
 
 import getopt
 import os
 import re
-import six
-from six.moves import socketserver
+import socketserver
 import subprocess
 import sys
 import tempfile
@@ -19,12 +16,8 @@ from ryu.ofproto import ofproto_v1_5
 from ryu.ofproto import ofproto_v1_5_parser
 from ryu.ofproto import ofproto_protocol
 
-if six.PY3:
-    TimeoutExpired = subprocess.TimeoutExpired
-else:
-    # As python2 doesn't have timeout for subprocess.call,
-    # this script may hang.
-    TimeoutExpired = None
+
+TimeoutExpired = subprocess.TimeoutExpired
 
 STD_MATCH = [
     'in_port=43981',

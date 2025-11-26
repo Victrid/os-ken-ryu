@@ -15,7 +15,6 @@
 """
   Defines some base class related to managing green threads.
 """
-from __future__ import absolute_import
 
 import abc
 from collections import OrderedDict
@@ -26,7 +25,6 @@ import traceback
 import weakref
 
 import netaddr
-import six
 
 from ryu.lib import hub
 from ryu.lib import sockopt
@@ -140,8 +138,7 @@ class ActivityException(BGPSException):
     pass
 
 
-@six.add_metaclass(abc.ABCMeta)
-class Activity(object):
+class Activity(object, metaclass=abc.ABCMeta):
     """Base class for a thread of execution that provides some custom settings.
 
     Activity is also a container of other activities or threads that it has
@@ -288,7 +285,7 @@ class Activity(object):
             if name is None or thread_name == name:
                 LOG.debug('%s: Stopping child thread %s',
                           self.name, thread_name)
-                thread.kill()
+                hub.kill(thread)
                 self._child_thread_map.pop(thread_name, None)
 
     def _close_asso_sockets(self):
@@ -307,12 +304,11 @@ class Activity(object):
         """Stops all child threads and activities and closes associated
         sockets.
 
-        Re-initializes this activity to be able to start again.
-        Raise `ActivityException` if activity is not currently started.
+        Re-initializes this activity to be able to start again. If the activity
+        is not started (is already stopped), it will silently return.
         """
         if not self.started:
-            raise ActivityException(desc='Cannot call stop when activity is '
-                                    'not started or has been stopped already.')
+            return
 
         LOG.debug('Stopping activity %s.', self.name)
         self._stop_timers()
@@ -390,16 +386,8 @@ class Activity(object):
         for sa in listen_sockets:
             name = self.name + '_server@' + str(sa[0])
             self._asso_socket_map[name] = listen_sockets[sa]
-            if count == 0:
-                import eventlet
-                server = eventlet.spawn(self._listen_socket_loop,
-                                        listen_sockets[sa], conn_handle)
-
-                self._child_thread_map[name] = server
-                count += 1
-            else:
-                server = self._spawn(name, self._listen_socket_loop,
-                                     listen_sockets[sa], conn_handle)
+            server = self._spawn(name, self._listen_socket_loop,
+                                 listen_sockets[sa], conn_handle)
         return server, listen_sockets
 
     def _connect_tcp(self, peer_addr, conn_handler, time_out=None,

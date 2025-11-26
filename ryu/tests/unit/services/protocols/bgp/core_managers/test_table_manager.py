@@ -14,21 +14,15 @@
 # limitations under the License.
 
 from collections import OrderedDict
-import unittest
 import logging
-try:
-    import mock  # Python 2
-except ImportError:
-    from unittest import mock  # Python 3
-
-from nose.tools import ok_, eq_, raises
+import unittest
+from unittest import mock
 
 from ryu.lib.packet.bgp import BGPPathAttributeOrigin
 from ryu.lib.packet.bgp import BGPPathAttributeAsPath
 from ryu.lib.packet.bgp import BGP_ATTR_ORIGIN_IGP
 from ryu.lib.packet.bgp import BGP_ATTR_TYPE_ORIGIN
 from ryu.lib.packet.bgp import BGP_ATTR_TYPE_AS_PATH
-from ryu.lib.packet.bgp import BGP_ATTR_TYPE_EXTENDED_COMMUNITIES
 from ryu.lib.packet.bgp import IPAddrPrefix
 from ryu.lib.packet.bgp import IP6AddrPrefix
 from ryu.lib.packet.bgp import EvpnArbitraryEsi
@@ -36,21 +30,13 @@ from ryu.lib.packet.bgp import EvpnLACPEsi
 from ryu.lib.packet.bgp import EvpnEthernetAutoDiscoveryNLRI
 from ryu.lib.packet.bgp import EvpnMacIPAdvertisementNLRI
 from ryu.lib.packet.bgp import EvpnInclusiveMulticastEthernetTagNLRI
-from ryu.lib.packet.bgp import FlowSpecIPv4NLRI
-from ryu.lib.packet.bgp import BGPPathAttributeExtendedCommunities
 from ryu.services.protocols.bgp.bgpspeaker import EVPN_MAX_ET
 from ryu.services.protocols.bgp.bgpspeaker import ESI_TYPE_LACP
-from ryu.services.protocols.bgp.bgpspeaker import FLOWSPEC_FAMILY_IPV4
-from ryu.services.protocols.bgp.bgpspeaker import FLOWSPEC_FAMILY_VPNV4
-from ryu.services.protocols.bgp.bgpspeaker import FLOWSPEC_TA_SAMPLE
-from ryu.services.protocols.bgp.bgpspeaker import FLOWSPEC_TA_TERMINAL
 from ryu.services.protocols.bgp.core import BgpCoreError
 from ryu.services.protocols.bgp.core_managers import table_manager
 from ryu.services.protocols.bgp.rtconf.vrfs import VRF_RF_IPV4
 from ryu.services.protocols.bgp.rtconf.vrfs import VRF_RF_IPV6
 from ryu.services.protocols.bgp.rtconf.vrfs import VRF_RF_L2_EVPN
-from ryu.services.protocols.bgp.rtconf.vrfs import VRF_RF_IPV4_FLOWSPEC
-from ryu.services.protocols.bgp.utils.bgp import create_v4flowspec_actions
 
 
 LOG = logging.getLogger(__name__)
@@ -84,17 +70,17 @@ class Test_TableCoreManager(unittest.TestCase):
 
         # Check
         call_args_list = vrf_table_mock.insert_vrf_path.call_args_list
-        ok_(len(call_args_list) == 1)  # insert_vrf_path should be called once
+        self.assertTrue(len(call_args_list) == 1)  # insert_vrf_path should be called once
         args, kwargs = call_args_list[0]
-        ok_(len(args) == 0)  # no positional argument
-        eq_(str(prefix_inst), str(kwargs['nlri']))
-        eq_(is_withdraw, kwargs['is_withdraw'])
+        self.assertTrue(len(args) == 0)  # no positional argument
+        self.assertEqual(str(prefix_inst), str(kwargs['nlri']))
+        self.assertEqual(is_withdraw, kwargs['is_withdraw'])
         if is_withdraw:
-            eq_(None, kwargs['next_hop'])
-            eq_(False, kwargs['gen_lbl'])
+            self.assertEqual(None, kwargs['next_hop'])
+            self.assertEqual(False, kwargs['gen_lbl'])
         else:
-            eq_(next_hop, kwargs['next_hop'])
-            eq_(True, kwargs['gen_lbl'])
+            self.assertEqual(next_hop, kwargs['next_hop'])
+            self.assertEqual(True, kwargs['gen_lbl'])
 
     def test_update_vrf_table_ipv4(self):
         # Prepare test data
@@ -236,13 +222,15 @@ class Test_TableCoreManager(unittest.TestCase):
 
         # Check
         call_args_list = vrf_table_mock.insert_vrf_path.call_args_list
-        ok_(len(call_args_list) == 1)  # insert_vrf_path should be called once
+        self.assertTrue(
+            len(call_args_list) == 1)  # insert_vrf_path should be called once
         args, kwargs = call_args_list[0]
-        ok_(len(args) == 0)  # no positional argument
-        eq_(str(prefix_inst), str(kwargs['nlri']))
-        eq_(next_hop, kwargs['next_hop'])
-        eq_(False, kwargs['gen_lbl'])  # should not generate MPLS labels
-        eq_(tunnel_type, kwargs['tunnel_type'])
+        self.assertTrue(len(args) == 0)  # no positional argument
+        self.assertEqual(str(prefix_inst), str(kwargs['nlri']))
+        self.assertEqual(next_hop, kwargs['next_hop'])
+        self.assertEqual(
+            False, kwargs['gen_lbl'])  # should not generate MPLS labels
+        self.assertEqual(tunnel_type, kwargs['tunnel_type'])
 
     def test_update_vrf_table_ipv4_withdraw(self):
         # Prepare test data
@@ -260,7 +248,6 @@ class Test_TableCoreManager(unittest.TestCase):
                                     next_hop, route_family, route_type,
                                     is_withdraw=True, **kwargs)
 
-    @raises(BgpCoreError)
     @mock.patch(
         'ryu.services.protocols.bgp.core_managers.TableCoreManager.__init__',
         mock.MagicMock(return_value=None))
@@ -280,15 +267,11 @@ class Test_TableCoreManager(unittest.TestCase):
         tbl_mng._tables = {}  # no table
 
         # Test
-        tbl_mng.update_vrf_table(
-            route_dist=route_dist,
-            prefix=prefix_str,
-            next_hop=next_hop,
-            route_family=route_family,
-            route_type=route_type,
-            **kwargs)
+        self.assertRaises(BgpCoreError, tbl_mng.update_vrf_table,
+                          route_dist=route_dist, prefix=prefix_str,
+                          next_hop=next_hop, route_family=route_family,
+                          route_type=route_type, **kwargs)
 
-    @raises(BgpCoreError)
     def test_update_vrf_table_invalid_next_hop(self):
         # Prepare test data
         route_dist = '65000:100'
@@ -301,11 +284,10 @@ class Test_TableCoreManager(unittest.TestCase):
         route_type = None  # should be ignored
         kwargs = {}  # should be ignored
 
-        self._test_update_vrf_table(prefix_inst, route_dist, prefix_str,
-                                    next_hop, route_family, route_type,
-                                    **kwargs)
+        self.assertRaises(BgpCoreError, self._test_update_vrf_table,
+                          prefix_inst, route_dist, prefix_str, next_hop,
+                          route_family, route_type, **kwargs)
 
-    @raises(BgpCoreError)
     def test_update_vrf_table_invalid_ipv4_prefix(self):
         # Prepare test data
         route_dist = '65000:100'
@@ -318,11 +300,10 @@ class Test_TableCoreManager(unittest.TestCase):
         route_type = None  # should be ignored
         kwargs = {}  # should be ignored
 
-        self._test_update_vrf_table(prefix_inst, route_dist, prefix_str,
-                                    next_hop, route_family, route_type,
-                                    **kwargs)
+        self.assertRaises(BgpCoreError, self._test_update_vrf_table,
+                          prefix_inst, route_dist, prefix_str,
+                          next_hop, route_family, route_type, **kwargs)
 
-    @raises(BgpCoreError)
     def test_update_vrf_table_invalid_ipv6_prefix(self):
         # Prepare test data
         route_dist = '65000:100'
@@ -335,11 +316,10 @@ class Test_TableCoreManager(unittest.TestCase):
         route_type = None  # should be ignored
         kwargs = {}  # should be ignored
 
-        self._test_update_vrf_table(prefix_inst, route_dist, prefix_str,
-                                    next_hop, route_family, route_type,
-                                    **kwargs)
+        self.assertRaises(BgpCoreError, self._test_update_vrf_table,
+                          prefix_inst, route_dist, prefix_str, next_hop,
+                          route_family, route_type, **kwargs)
 
-    @raises(BgpCoreError)
     def test_update_vrf_table_invalid_route_family(self):
         # Prepare test data
         route_dist = '65000:100'
@@ -352,9 +332,9 @@ class Test_TableCoreManager(unittest.TestCase):
         route_type = None  # should be ignored
         kwargs = {}  # should be ignored
 
-        self._test_update_vrf_table(prefix_inst, route_dist, prefix_str,
-                                    next_hop, route_family, route_type,
-                                    **kwargs)
+        self.assertRaises(BgpCoreError, self._test_update_vrf_table,
+                          prefix_inst, route_dist, prefix_str, next_hop,
+                          route_family, route_type, **kwargs)
 
     @mock.patch(
         'ryu.services.protocols.bgp.core_managers.TableCoreManager.__init__',
@@ -383,15 +363,15 @@ class Test_TableCoreManager(unittest.TestCase):
 
         # Check
         call_args_list = learn_path_mock.call_args_list
-        ok_(len(call_args_list) == 1)  # learn_path should be called once
+        self.assertTrue(len(call_args_list) == 1)  # learn_path should be called once
         args, kwargs = call_args_list[0]
-        ok_(len(kwargs) == 0)  # no keyword argument
+        self.assertTrue(len(kwargs) == 0)  # no keyword argument
         output_path = args[0]
-        eq_(None, output_path.source)
-        eq_(prefix, output_path.nlri.prefix)
-        eq_(pathattrs, str(output_path.pathattr_map))
-        eq_(expected_next_hop, output_path.nexthop)
-        eq_(is_withdraw, output_path.is_withdraw)
+        self.assertEqual(None, output_path.source)
+        self.assertEqual(prefix, output_path.nlri.prefix)
+        self.assertEqual(pathattrs, str(output_path.pathattr_map))
+        self.assertEqual(expected_next_hop, output_path.nexthop)
+        self.assertEqual(is_withdraw, output_path.is_withdraw)
 
     def test_update_global_table_ipv4(self):
         self._test_update_global_table(
@@ -463,12 +443,12 @@ class Test_TableCoreManager(unittest.TestCase):
 
         # Check
         call_args_list = vrf_table_mock.insert_vrffs_path.call_args_list
-        ok_(len(
+        self.assertTrue(len(
             call_args_list) == 1)  # insert_vrffs_path should be called once
         args, kwargs = call_args_list[0]
-        ok_(len(args) == 0)  # no positional argument
-        eq_(prefix, kwargs['nlri'].prefix)
-        eq_(is_withdraw, kwargs['is_withdraw'])
+        self.assertTrue(len(args) == 0)  # no positional argument
+        self.assertEqual(prefix, kwargs['nlri'].prefix)
+        self.assertEqual(is_withdraw, kwargs['is_withdraw'])
 
     def test_update_flowspec_vrf_table_vpnv4(self):
         flowspec_family = 'vpnv4fs'
@@ -513,7 +493,6 @@ class Test_TableCoreManager(unittest.TestCase):
             is_withdraw=False,
         )
 
-    @raises(BgpCoreError)
     def test_update_flowspec_vrf_table_vpnv4_invalid_actions(self):
         flowspec_family = 'vpnv4fs'
         route_family = 'ipv4fs'
@@ -528,17 +507,15 @@ class Test_TableCoreManager(unittest.TestCase):
         }
         prefix = 'ipv4fs(dst_prefix:10.70.1.0/24)'
 
-        self._test_update_flowspec_vrf_table(
-            flowspec_family=flowspec_family,
-            route_family=route_family,
-            route_dist=route_dist,
-            rules=rules,
-            prefix=prefix,
-            is_withdraw=False,
-            actions=actions,
-        )
+        self.assertRaises(BgpCoreError, self._test_update_flowspec_vrf_table,
+                          flowspec_family=flowspec_family,
+                          route_family=route_family,
+                          route_dist=route_dist,
+                          rules=rules,
+                          prefix=prefix,
+                          is_withdraw=False,
+                          actions=actions)
 
-    @raises(BgpCoreError)
     def test_update_flowspec_vrf_table_vpnv4_invalid_flowspec_family(self):
         flowspec_family = 'invalid'
         route_family = 'ipv4fs'
@@ -548,16 +525,14 @@ class Test_TableCoreManager(unittest.TestCase):
         }
         prefix = 'ipv4fs(dst_prefix:10.70.1.0/24)'
 
-        self._test_update_flowspec_vrf_table(
-            flowspec_family=flowspec_family,
-            route_family=route_family,
-            route_dist=route_dist,
-            rules=rules,
-            prefix=prefix,
-            is_withdraw=False,
-        )
+        self.assertRaises(BgpCoreError, self._test_update_flowspec_vrf_table,
+                          flowspec_family=flowspec_family,
+                          route_family=route_family,
+                          route_dist=route_dist,
+                          rules=rules,
+                          prefix=prefix,
+                          is_withdraw=False)
 
-    @raises(BgpCoreError)
     def test_update_flowspec_vrf_table_vpnv4_invalid_route_family(self):
         flowspec_family = 'vpnv4fs'
         route_family = 'invalid'
@@ -567,14 +542,13 @@ class Test_TableCoreManager(unittest.TestCase):
         }
         prefix = 'ipv4fs(dst_prefix:10.70.1.0/24)'
 
-        self._test_update_flowspec_vrf_table(
-            flowspec_family=flowspec_family,
-            route_family=route_family,
-            route_dist=route_dist,
-            rules=rules,
-            prefix=prefix,
-            is_withdraw=False,
-        )
+        self.assertRaises(BgpCoreError, self._test_update_flowspec_vrf_table,
+                          flowspec_family=flowspec_family,
+                          route_family=route_family,
+                          route_dist=route_dist,
+                          rules=rules,
+                          prefix=prefix,
+                          is_withdraw=False)
 
     @mock.patch(
         'ryu.services.protocols.bgp.core_managers.TableCoreManager.__init__',
@@ -597,14 +571,14 @@ class Test_TableCoreManager(unittest.TestCase):
 
         # Check
         call_args_list = learn_path_mock.call_args_list
-        ok_(len(call_args_list) == 1)  # learn_path should be called once
+        self.assertTrue(len(call_args_list) == 1)  # learn_path should be called once
         args, kwargs = call_args_list[0]
-        ok_(len(kwargs) == 0)  # no keyword argument
+        self.assertTrue(len(kwargs) == 0)  # no keyword argument
         output_path = args[0]
-        eq_(None, output_path.source)
-        eq_(prefix, output_path.nlri.prefix)
-        eq_(None, output_path.nexthop)
-        eq_(is_withdraw, output_path.is_withdraw)
+        self.assertEqual(None, output_path.source)
+        self.assertEqual(prefix, output_path.nlri.prefix)
+        self.assertEqual(None, output_path.nexthop)
+        self.assertEqual(is_withdraw, output_path.is_withdraw)
 
     def test_update_flowspec_global_table_ipv4(self):
         flowspec_family = 'ipv4fs'
@@ -641,7 +615,6 @@ class Test_TableCoreManager(unittest.TestCase):
             is_withdraw=False,
         )
 
-    @raises(BgpCoreError)
     def test_update_flowspec_global_table_ipv4_invalid_actions(self):
         flowspec_family = 'ipv4fs'
         rules = {
@@ -654,15 +627,14 @@ class Test_TableCoreManager(unittest.TestCase):
         }
         prefix = 'ipv4fs(dst_prefix:10.60.1.0/24)'
 
-        self._test_update_flowspec_global_table(
-            flowspec_family=flowspec_family,
-            rules=rules,
-            prefix=prefix,
-            is_withdraw=False,
-            actions=actions,
-        )
+        self.assertRaises(BgpCoreError,
+                          self._test_update_flowspec_global_table,
+                          flowspec_family=flowspec_family,
+                          rules=rules,
+                          prefix=prefix,
+                          is_withdraw=False,
+                          actions=actions)
 
-    @raises(BgpCoreError)
     def test_update_flowspec_global_table_ipv4_invalid_flowspec_family(self):
         flowspec_family = 'invalid'
         rules = {
@@ -676,13 +648,13 @@ class Test_TableCoreManager(unittest.TestCase):
         }
         prefix = 'ipv4fs(dst_prefix:10.60.1.0/24)'
 
-        self._test_update_flowspec_global_table(
-            flowspec_family=flowspec_family,
-            rules=rules,
-            prefix=prefix,
-            is_withdraw=False,
-            actions=actions,
-        )
+        self.assertRaises(BgpCoreError,
+                          self._test_update_flowspec_global_table,
+                          flowspec_family=flowspec_family,
+                          rules=rules,
+                          prefix=prefix,
+                          is_withdraw=False,
+                          actions=actions)
 
     def test_update_flowspec_global_table_ipv6(self):
         flowspec_family = 'ipv6fs'
@@ -719,7 +691,6 @@ class Test_TableCoreManager(unittest.TestCase):
             is_withdraw=False,
         )
 
-    @raises(BgpCoreError)
     def test_update_flowspec_global_table_ipv6_invalid_actions(self):
         flowspec_family = 'ipv6fs'
         rules = {
@@ -732,15 +703,14 @@ class Test_TableCoreManager(unittest.TestCase):
         }
         prefix = 'ipv4fs(dst_prefix:2001::3/128/32)'
 
-        self._test_update_flowspec_global_table(
-            flowspec_family=flowspec_family,
-            rules=rules,
-            prefix=prefix,
-            is_withdraw=False,
-            actions=actions,
-        )
+        self.assertRaises(BgpCoreError,
+                          self._test_update_flowspec_global_table,
+                          flowspec_family=flowspec_family,
+                          rules=rules,
+                          prefix=prefix,
+                          is_withdraw=False,
+                          actions=actions)
 
-    @raises(BgpCoreError)
     def test_update_flowspec_global_table_ipv6_invalid_flowspec_family(self):
         flowspec_family = 'invalid'
         rules = {
@@ -754,13 +724,13 @@ class Test_TableCoreManager(unittest.TestCase):
         }
         prefix = 'ipv4fs(dst_prefix:2001::3/128/32)'
 
-        self._test_update_flowspec_global_table(
-            flowspec_family=flowspec_family,
-            rules=rules,
-            prefix=prefix,
-            is_withdraw=False,
-            actions=actions,
-        )
+        self.assertRaises(BgpCoreError,
+                          self._test_update_flowspec_global_table,
+                          flowspec_family=flowspec_family,
+                          rules=rules,
+                          prefix=prefix,
+                          is_withdraw=False,
+                          actions=actions)
 
     def test_update_flowspec_vrf_table_vpnv6(self):
         flowspec_family = 'vpnv6fs'
@@ -805,7 +775,6 @@ class Test_TableCoreManager(unittest.TestCase):
             is_withdraw=False,
         )
 
-    @raises(BgpCoreError)
     def test_update_flowspec_vrf_table_vpnv6_invalid_actions(self):
         flowspec_family = 'vpnv6fs'
         route_family = 'ipv6fs'
@@ -820,17 +789,15 @@ class Test_TableCoreManager(unittest.TestCase):
         }
         prefix = 'ipv6fs(dst_prefix:2001::3/128/32)'
 
-        self._test_update_flowspec_vrf_table(
-            flowspec_family=flowspec_family,
-            route_family=route_family,
-            route_dist=route_dist,
-            rules=rules,
-            prefix=prefix,
-            is_withdraw=False,
-            actions=actions,
-        )
+        self.assertRaises(BgpCoreError, self._test_update_flowspec_vrf_table,
+                          flowspec_family=flowspec_family,
+                          route_family=route_family,
+                          route_dist=route_dist,
+                          rules=rules,
+                          prefix=prefix,
+                          is_withdraw=False,
+                          actions=actions)
 
-    @raises(BgpCoreError)
     def test_update_flowspec_vrf_table_vpnv6_invalid_route_family(self):
         flowspec_family = 'vpnv6fs'
         route_family = 'invalid'
@@ -840,14 +807,13 @@ class Test_TableCoreManager(unittest.TestCase):
         }
         prefix = 'ipv4fs(dst_prefix:2001::3/128/32)'
 
-        self._test_update_flowspec_vrf_table(
-            flowspec_family=flowspec_family,
-            route_family=route_family,
-            route_dist=route_dist,
-            rules=rules,
-            prefix=prefix,
-            is_withdraw=False,
-        )
+        self.assertRaises(BgpCoreError, self._test_update_flowspec_vrf_table,
+                          flowspec_family=flowspec_family,
+                          route_family=route_family,
+                          route_dist=route_dist,
+                          rules=rules,
+                          prefix=prefix,
+                          is_withdraw=False)
 
     def test_update_flowspec_vrf_table_l2vpn(self):
         flowspec_family = 'l2vpnfs'
@@ -892,7 +858,6 @@ class Test_TableCoreManager(unittest.TestCase):
             is_withdraw=False,
         )
 
-    @raises(BgpCoreError)
     def test_update_flowspec_vrf_table_l2vpn_invalid_actions(self):
         flowspec_family = 'l2vpnfs'
         route_family = 'l2vpnfs'
@@ -907,17 +872,15 @@ class Test_TableCoreManager(unittest.TestCase):
         }
         prefix = 'l2vpnfs(dst_mac:12:34:56:78:9a:bc)'
 
-        self._test_update_flowspec_vrf_table(
-            flowspec_family=flowspec_family,
-            route_family=route_family,
-            route_dist=route_dist,
-            rules=rules,
-            prefix=prefix,
-            is_withdraw=False,
-            actions=actions,
-        )
+        self.assertRaises(BgpCoreError, self._test_update_flowspec_vrf_table,
+                          flowspec_family=flowspec_family,
+                          route_family=route_family,
+                          route_dist=route_dist,
+                          rules=rules,
+                          prefix=prefix,
+                          is_withdraw=False,
+                          actions=actions)
 
-    @raises(BgpCoreError)
     def test_update_flowspec_vrf_table_l2vpn_invalid_route_family(self):
         flowspec_family = 'l2vpnfs'
         route_family = 'invalid'
@@ -927,11 +890,10 @@ class Test_TableCoreManager(unittest.TestCase):
         }
         prefix = 'l2vpnfs(dst_mac:12:34:56:78:9a:bc)'
 
-        self._test_update_flowspec_vrf_table(
-            flowspec_family=flowspec_family,
-            route_family=route_family,
-            route_dist=route_dist,
-            rules=rules,
-            prefix=prefix,
-            is_withdraw=False,
-        )
+        self.assertRaises(BgpCoreError, self._test_update_flowspec_vrf_table,
+                          flowspec_family=flowspec_family,
+                          route_family=route_family,
+                          route_dist=route_dist,
+                          rules=rules,
+                          prefix=prefix,
+                          is_withdraw=False)

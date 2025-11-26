@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 
 # Copyright (C) 2013 Nippon Telegraph and Telephone Corporation.
 # Copyright (C) 2013 YAMAMOTO Takashi <yamamoto at valinux co jp>
@@ -25,9 +25,9 @@ import sys
 j = sys.stdin.read()
 l = json.loads(j)
 
-print 'digraph {'
-print 'node [shape=box]'
+print('digraph {')
+print('node [shape=box]')
 for d in l:
-    print '"%s" -> "%s";' % (d['src']['dpid'], d['dst']['dpid'])
-print 'overlap=false'
-print '}'
+    print('"%s" -> "%s";' % (d['src']['dpid'], d['dst']['dpid']))
+print('overlap=false')
+print('}')

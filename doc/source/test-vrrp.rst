@@ -2,7 +2,7 @@
 Testing VRRP Module
 ===================
 
-This page describes how to test Ryu VRRP service
+This page describes how to test OS-Ken VRRP service
 
 Running integrated tests
 ========================
@@ -16,18 +16,18 @@ Each files include how to run in the comment.
 Please refer to it.
 
 
-Running multiple Ryu VRRP in network namespace
-==============================================
+Running multiple OS-Ken VRRP in network namespace
+=================================================
 
 The following command lines set up necessary bridges and interfaces.
 
-And then run RYU-VRRP::
+And then run OSKen-VRRP::
 
     # ip netns add gateway1
     # ip netns add gateway2
 
-    # brctl addbr vrrp-br0
-    # brctl addbr vrrp-br1
+    # ip link add dev vrrp-br0 type bridge
+    # ip link add dev vrrp-br1 type bridge
 
     # ip link add veth0 type veth peer name veth0-br0
     # ip link add veth1 type veth peer name veth1-br0
@@ -36,12 +36,12 @@ And then run RYU-VRRP::
     # ip link add veth4 type veth peer name veth4-br1
     # ip link add veth5 type veth peer name veth5-br1
 
-    # brctl addif vrrp-br0 veth0-br0
-    # brctl addif vrrp-br0 veth1-br0
-    # brctl addif vrrp-br0 veth2-br0
-    # brctl addif vrrp-br1 veth3-br1
-    # brctl addif vrrp-br1 veth4-br1
-    # brctl addif vrrp-br1 veth5-br1
+    # ip link set dev veth0-br0 master vrrp-br0
+    # ip link set dev veth1-br0 master vrrp-br0
+    # ip link set dev veth2-br0 master vrrp-br0
+    # ip link set dev veth3-br0 master vrrp-br1
+    # ip link set dev veth4-br0 master vrrp-br1
+    # ip link set dev veth5-br0 master vrrp-br1
 
     # ip link set vrrp-br0 up
     # ip link set vrrp-br1 up
@@ -82,17 +82,17 @@ And then run RYU-VRRP::
             -----------------------
             |Linux Brirge vrrp-br1|
             -----------------------
-     veth3-br1^            ^ veth4-br1
-              |            |
-         veth3V            V veth4
-         ----------       ----------
-         |netns   |       |netns   |
-         |gateway1|       |gateway2|
+     veth3-br1^               ^ veth4-br1
+              |               |
+         veth3V               V veth4
+         -------------       -------------
+         |netns      |       |netns      |
+         |gateway1   |       |gateway2   |
          |ryu-vrrp|       |ryu-vrrp|
-         ----------       ----------
-         veth1^            ^ veth2
-              |            |
-     veth1-br0V            V veth2-br0
+         -------------       ----------
+         veth1^               ^ veth2
+              |               |
+     veth1-br0V               V veth2-br0
             -----------------------
             |Linux Brirge vrrp-br0|
             -----------------------
@@ -104,7 +104,7 @@ And then run RYU-VRRP::
 
 Here's the helper executable, ryu-vrrp::
 
-    #!/usr/bin/env python
+    #!/usr/bin/env python3
     #
     # Copyright (C) 2013 Nippon Telegraph and Telephone Corporation.
     # Copyright (C) 2013 Isaku Yamahata <yamahata at valinux co jp>
@@ -121,10 +121,10 @@ Here's the helper executable, ryu-vrrp::
     # implied.
     # See the License for the specific language governing permissions and
     # limitations under the License.
-    
+
     from ryu.lib import hub
     hub.patch()
-    
+
     # TODO:
     #   Right now, we have our own patched copy of ovs python bindings
     #   Once our modification is upstreamed and widely deployed,
@@ -133,16 +133,16 @@ Here's the helper executable, ryu-vrrp::
     # NOTE: this modifies sys.path and thus affects the following imports.
     # eg. oslo.config.cfg.
     import ryu.contrib
-    
+
     from oslo.config import cfg
     import logging
     import netaddr
     import sys
     import time
-    
+
     from ryu import log
     log.early_init_log(logging.DEBUG)
-    
+
     from ryu import flags
     from ryu import version
     from ryu.base import app_manager
@@ -151,15 +151,15 @@ Here's the helper executable, ryu-vrrp::
     from ryu.lib.packet import vrrp
     from ryu.services.protocols.vrrp import api as vrrp_api
     from ryu.services.protocols.vrrp import event as vrrp_event
-    
-    
+
+
     CONF = cfg.CONF
-    
+
     _VRID = 7
     _IP_ADDRESS = '10.0.0.1'
     _PRIORITY = 100
-    
-    
+
+
     class VRRPTestRouter(app_manager.RyuApp):
         def __init__(self, *args, **kwargs):
             super(VRRPTestRouter, self).__init__(*args, **kwargs)
@@ -168,50 +168,50 @@ Here's the helper executable, ryu-vrrp::
             self._ifname = args[0]
             self._primary_ip_address = args[1]
             self._priority = int(args[2])
-    
+
         def start(self):
             print 'start'
             hub.spawn(self._main)
-    
+
         def _main(self):
             print self
             interface = vrrp_event.VRRPInterfaceNetworkDevice(
                 lib_mac.DONTCARE, self._primary_ip_address, None, self._ifname)
             self.logger.debug('%s', interface)
-    
+
             ip_addresses = [_IP_ADDRESS]
             config = vrrp_event.VRRPConfig(
                 version=vrrp.VRRP_VERSION_V3, vrid=_VRID, priority=self._priority,
                 ip_addresses=ip_addresses)
             self.logger.debug('%s', config)
-    
+
             rep = vrrp_api.vrrp_config(self, interface, config)
             self.logger.debug('%s', rep)
-    
-    
+
+
     def main():
         vrrp_config = sys.argv[-3:]
         sys.argv = sys.argv[:-3]
         CONF(project='ryu', version='ryu-vrrp %s' % version)
-    
+
         log.init_log()
         # always enable ofp for now.
         app_lists = ['ryu.services.protocols.vrrp.manager',
                      'ryu.services.protocols.vrrp.dumper',
                      'ryu.services.protocols.vrrp.sample_manager']
-    
+
         app_mgr = app_manager.AppManager.get_instance()
         app_mgr.load_apps(app_lists)
         contexts = app_mgr.create_contexts()
         app_mgr.instantiate_apps(**contexts)
         vrrp_router = app_mgr.instantiate(VRRPTestRouter, *vrrp_config, **contexts)
         vrrp_router.start()
-    
+
         while True:
             time.sleep(999999)
-    
+
         app_mgr.close()
-    
-    
+
+
     if __name__ == "__main__":
         main()

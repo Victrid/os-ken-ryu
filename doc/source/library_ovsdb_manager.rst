@@ -7,14 +7,14 @@ Path: ``ryu.services.protocols.ovsdb``
 Introduction
 ============
 
-Ryu OVSDB Manager library allows your code to interact with devices
+OS-Ken OVSDB Manager library allows your code to interact with devices
 speaking the OVSDB protocol. This enables your code to perform remote
 management of the devices and react to topology changes on them.
 
 Please note this library will spawn a server listening on the port 6640 (the
 IANA registered for OVSDB protocol), but does not initiate connections from
 controller side.
-Then, to make your devices connect to Ryu, you need to tell the controller IP
+Then, to make your devices connect to OS-Ken, you need to tell the controller IP
 address and port to your devices.
 
 .. code-block:: bash

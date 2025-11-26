@@ -1,12 +1,12 @@
-*************
+****************
 ryu.app.ofctl
-*************
+****************
 
 ryu.app.ofctl provides a convenient way to use OpenFlow messages
 synchronously.
 
 OfctlService ryu application is automatically loaded if your
-Ryu application imports ofctl.api module.
+OS-Ken application imports ofctl.api module.
 
 Example::
 

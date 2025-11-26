@@ -28,9 +28,9 @@ x() ->
         skip,
         #ofp_packet_out{
             buffer_id = ?OFP_NO_BUFFER,in_port = controller,
-            actions = 
+            actions =
                 [#ofp_action_output{port = all,max_len = 65535}],
-            data = 
+            data =
                 <<242,11,164,208,63,112,242,11,164,125,248,234,8,0,69,0,
                   0,84,248,26,0,0,255,1,175,139,10,0,0,1,10,0,0,2,8,0,2,
                   8,247,96,0,0,49,214,2,0,0,0,0,0,171,141,45,49,0,0,0,0,
@@ -46,7 +46,7 @@ x() ->
                 #ofp_match{
                     wildcards = 16#3ffff7,
                     dl_dst = <<"\362\v\244}\370\352">>,
-                    % XXX ryu and flower have different defaults for the
+                    % XXX os-ken and flower have different defaults for the
                     % followin fields.
                     in_port = 0,
                     dl_src = <<0:6/unit:8>>
@@ -63,11 +63,11 @@ x() ->
         features_request,
         #ofp_switch_features{  % features_reply
             datapath_id = 16#ff12345678,n_buffers = 0,n_tables = 255,
-            capabilities = 
+            capabilities =
                 [arp_match_ip,ip_reasm,stp,flow_stats],
             actions =
                 [enqueue,set_nw_src,set_vlan_vid,output],
-            ports = 
+            ports =
                 [#ofp_phy_port{
                      port_no = 7,hw_addr = <<"\362\v\244\320?p">>,
                      name = <<"Port7">>,

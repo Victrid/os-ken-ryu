@@ -18,7 +18,6 @@
 
  This API can be used by various services like RPC, CLI, IoC, etc.
 """
-from __future__ import absolute_import
 
 import logging
 import traceback
@@ -195,7 +194,13 @@ def call(symbol, **kwargs):
     """Calls/executes BGPS public API identified by given symbol and passes
     given kwargs as param.
     """
-    LOG.info("API method %s called with args: %s", symbol, str(kwargs))
+    if 'password' in kwargs:
+        log_str = str(
+            dict(kwargs.items() - {'password': kwargs['password']}.items()))
+    else:
+        log_str = str(kwargs)
+    LOG.info(
+        "API method %s called with args: %s", symbol, log_str)
 
     # TODO(PH, JK) improve the way api function modules are loaded
     from . import all  # noqa

@@ -22,7 +22,7 @@ from ryu.controller import event
 from ryu.controller import handler
 from ryu.controller import ofp_event
 from ryu.controller.handler import set_ev_cls
-from ryu.exception import RyuException
+from ryu.exception import OSKenException
 from ryu.exception import OFPUnknownVersion
 from ryu.lib import hub
 from ryu.lib import mac
@@ -832,7 +832,7 @@ class Port(object):
                 except hub.Timeout as t:
                     if t is not timeout:
                         err_msg = 'Internal error. Not my timeout.'
-                        raise RyuException(msg=err_msg)
+                        raise OSKenException(msg=err_msg)
                     new_state = self._get_next_state()
                     self._change_status(new_state, thread_switch=False)
                 finally:
@@ -865,7 +865,7 @@ class Port(object):
         if new_state is not PORT_STATE_DISABLE:
             self.ofctl.set_port_status(self.ofport, new_state)
 
-        if(new_state is PORT_STATE_FORWARD
+        if (new_state is PORT_STATE_FORWARD
            or (self.state is PORT_STATE_FORWARD
                and (new_state is PORT_STATE_DISABLE
                     or new_state is PORT_STATE_BLOCK))):
@@ -975,7 +975,7 @@ class Port(object):
             except hub.Timeout as t:
                 if t is not timeout:
                     err_msg = 'Internal error. Not my timeout.'
-                    raise RyuException(msg=err_msg)
+                    raise OSKenException(msg=err_msg)
                 self.logger.info('[port=%d] Wait BPDU timer is exceeded.',
                                  self.ofport.port_no, extra=self.dpid_str)
                 time_exceed = True

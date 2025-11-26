@@ -14,7 +14,7 @@
 # limitations under the License.
 
 """
-This module provides a convenient application for using Ryu BGPSpeaker and for
+This module provides a convenient application for using OSKen BGPSpeaker and for
 writing your BGP application.
 
 It reads a configuration file which includes settings for neighbors, routes
@@ -24,7 +24,7 @@ sample configuration.
 
 Usage Example::
 
-    $ ryu-manager ryu/services/protocols/bgp/application.py \\
+    $ osken-manager ryu/services/protocols/bgp/application.py \\
         --bgp-app-config-file ryu/services/protocols/bgp/bgp_sample_conf.py
 
 SSH Console
@@ -39,7 +39,7 @@ Example::
 
     $ ssh localhost -p 4990
 
-    Hello, this is Ryu BGP speaker (version 4.19).
+    Hello, this is OSKen BGP speaker (version 4.19).
 
     bgpd> # Hit '?' key
      clear - allows to reset BGP connections
@@ -58,8 +58,8 @@ Example::
 Integration with Other Applications
 ===================================
 
-``ryu.services.protocols.bgp.application.RyuBGPSpeaker`` will notifies the
-following events to other Ryu applications.
+``ryu.services.protocols.bgp.application.OSKenBGPSpeaker`` will notifies the
+following events to other OSKen applications.
 
     - ``EventBestPathChanged``
     - ``EventAdjRibInChanged``
@@ -67,7 +67,7 @@ following events to other Ryu applications.
     - ``EventPeerUp``
 
 To catch these events, specify ``@set_ev_cls()`` decorator to the event
-handlers in the Ryu applications.
+handlers in the OSKen applications.
 
 Example Application::
 
@@ -80,13 +80,13 @@ Example Application::
 
     class MyBGPApp(app_manager.RyuApp):
         _CONTEXTS = {
-            'ryubgpspeaker': bgp_application.RyuBGPSpeaker,
+            'ryubgpspeaker': bgp_application.OSKenBGPSpeaker,
         }
 
         def __init__(self, *args, **kwargs):
             super(MyBGPApp, self).__init__(*args, **kwargs)
 
-            # Stores "ryu.services.protocols.bgp.application.RyuBGPSpeaker"
+            # Stores "ryu.services.protocols.bgp.application.OSKenBGPSpeaker"
             # instance in order to call the APIs of
             # "ryu.services.protocols.bgp.bgpspeaker.BGPSpeaker" via
             # "self.app.speaker".
@@ -101,7 +101,7 @@ Example Application::
 
 Usage Example::
 
-    $ ryu-manager my_bgp_app.py \\
+    $ osken-manager my_bgp_app.py \\
         --bgp-app-config-file ryu/services/protocols/bgp/bgp_sample_conf.py
 
 .. note::
@@ -260,7 +260,7 @@ class EventPeerUp(EventBase):
         self.remote_as = remote_as
 
 
-class RyuBGPSpeaker(RyuApp):
+class OSKenBGPSpeaker(RyuApp):
     """
     Base application for implementing BGP applications.
     """
@@ -272,14 +272,14 @@ class RyuBGPSpeaker(RyuApp):
     ]
 
     def __init__(self, *args, **kwargs):
-        super(RyuBGPSpeaker, self).__init__(*args, **kwargs)
+        super(OSKenBGPSpeaker, self).__init__(*args, **kwargs)
         self.config_file = CONF.config_file
 
         # BGPSpeaker instance (not instantiated yet)
         self.speaker = None
 
     def start(self):
-        super(RyuBGPSpeaker, self).start()
+        super(OSKenBGPSpeaker, self).start()
 
         # If configuration file was provided and loaded successfully, we start
         # BGPSpeaker using the given settings.

@@ -16,8 +16,6 @@
 import struct
 import logging
 
-import six
-
 from ryu.lib import stringify
 from . import packet_base
 from . import packet_utils
@@ -117,8 +115,8 @@ class tcp(packet_base.PacketBase):
         from ryu.ofproto.ofproto_common import OFP_TCP_PORT, OFP_SSL_PORT_OLD
         if bgp.TCP_SERVER_PORT in [src_port, dst_port]:
             return bgp.BGPMessage
-        elif(src_port in [OFP_TCP_PORT, OFP_SSL_PORT_OLD] or
-             dst_port in [OFP_TCP_PORT, OFP_SSL_PORT_OLD]):
+        elif (src_port in [OFP_TCP_PORT, OFP_SSL_PORT_OLD] or
+              dst_port in [OFP_TCP_PORT, OFP_SSL_PORT_OLD]):
             return openflow.openflow
         elif src_port == zebra.ZEBRA_PORT:
             return zebra._ZebraMessageFromZebra
@@ -187,7 +185,7 @@ class tcp(packet_base.PacketBase):
             self.csum = packet_utils.checksum_ip(prev, total_length,
                                                  h + payload)
             struct.pack_into('!H', h, 16, self.csum)
-        return six.binary_type(h)
+        return bytes(h)
 
 
 class TCPOption(stringify.StringifyMixin):

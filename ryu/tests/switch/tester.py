@@ -21,7 +21,6 @@ import math
 import netaddr
 import os
 import signal
-import six
 import sys
 import time
 import traceback
@@ -32,7 +31,7 @@ from ryu.base import app_manager
 from ryu.controller import handler
 from ryu.controller import ofp_event
 from ryu.controller.handler import set_ev_cls
-from ryu.exception import RyuException
+from ryu.exception import OSKenException
 from ryu.lib import dpid as dpid_lib
 from ryu.lib import hub
 from ryu.lib import stringify
@@ -57,7 +56,7 @@ CLSNAME_ALIASES = {
     ('ryu.lib.packet.ospf', 'StringifyMixin'): ''
 }
 
-for modname, moddef in sys.modules.items():
+for modname, moddef in sys.modules.copy().items():
     if not modname.startswith(PKT_LIB_PATH) or not moddef:
         continue
     for (clsname, clsdef, ) in inspect.getmembers(moddef):
@@ -173,7 +172,7 @@ STATE_DISCONNECTED = 99
 # Test result.
 TEST_OK = 'OK'
 TEST_ERROR = 'ERROR'
-RYU_INTERNAL_ERROR = '- (Ryu internal error.)'
+OSKEN_INTERNAL_ERROR = '- (OSKen internal error.)'
 TEST_FILE_ERROR = '%(file)s : Test file format error (%(detail)s)'
 NO_TEST_FILE = 'Test file (*.json) is not found.'
 INVALID_PATH = '%(path)s : No such file or directory.'
@@ -255,7 +254,7 @@ MSG = {STATE_INIT_FLOW:
 ERR_MSG = 'OFPErrorMsg[type=0x%02x, code=0x%02x]'
 
 
-class TestMessageBase(RyuException):
+class TestMessageBase(OSKenException):
     def __init__(self, state, message_type, **argv):
         msg = MSG[state][message_type] % argv
         super(TestMessageBase, self).__init__(msg=msg)
@@ -555,7 +554,7 @@ class OfTester(app_manager.RyuApp):
         self.logger.info('    %-100s %s', test.description, result[0])
         if 1 < len(result):
             self.logger.info('        %s', result[1])
-            if result[1] == RYU_INTERNAL_ERROR\
+            if result[1] == OSKEN_INTERNAL_ERROR\
                     or result == 'An unknown exception':
                 self.logger.error(traceback.format_exc())
 
@@ -963,7 +962,7 @@ class OfTester(app_manager.RyuApp):
     def _diff_packets(cls, model_pkt, rcv_pkt):
         msg = []
         for rcv_p in rcv_pkt.protocols:
-            if not isinstance(rcv_p, six.binary_type):
+            if not isinstance(rcv_p, bytes):
                 model_protocols = model_pkt.get_protocols(type(rcv_p))
                 if len(model_protocols) == 1:
                     model_p = model_protocols[0]
@@ -990,7 +989,7 @@ class OfTester(app_manager.RyuApp):
             else:
                 model_p = ''
                 for p in model_pkt.protocols:
-                    if isinstance(p, six.binary_type):
+                    if isinstance(p, bytes):
                         model_p = p
                         break
                 if model_p != rcv_p:
@@ -1041,7 +1040,7 @@ class OfTester(app_manager.RyuApp):
                 measured_value = increased_bytes
                 unit = 'kbps'
             else:
-                raise RyuException(
+                raise OSKenException(
                     'An invalid key exists that is neither "%s" nor "%s".'
                     % (KEY_KBPS, KEY_PKTPS))
 
@@ -1071,7 +1070,7 @@ class OfTester(app_manager.RyuApp):
             self.waiter.wait()
         except hub.Timeout as t:
             if t is not timer:
-                raise RyuException('Internal error. Not my timeout.')
+                raise OSKenException('Internal error. Not my timeout.')
             timeout = True
         finally:
             timer.cancel()
@@ -1370,7 +1369,7 @@ class TestFile(stringify.StringifyMixin):
             try:
                 json_list = json.loads(buf)
                 for test_json in json_list:
-                    if isinstance(test_json, six.text_type):
+                    if isinstance(test_json, str):
                         self.description = test_json
                     else:
                         self._normalize_test_json(test_json)
@@ -1393,7 +1392,7 @@ class Test(stringify.StringifyMixin):
         def __test_pkt_from_json(test):
             data = eval('/'.join(test))
             data.serialize()
-            return six.binary_type(data.data)
+            return bytes(data.data)
 
         # create Datapath instance using user-specified versions
         target_dp = DummyDatapath(OfTester.target_ver)

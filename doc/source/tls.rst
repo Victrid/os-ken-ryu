@@ -3,7 +3,7 @@ Setup TLS Connection
 ********************
 
 If you want to use secure channel to connect OpenFlow switches, you
-need to use TLS connection. This document describes how to setup Ryu
+need to use TLS connection. This document describes how to setup OS-Ken
 to connect to the Open vSwitch over TLS.
 
 
@@ -58,9 +58,9 @@ Substitute the correct file names, if they differ from the ones used
 above. You should use absolute file names.
 
 
-Run Ryu with CA files::
+Run OS-Ken with CA files::
 
-    % ryu-manager --ctl-privkey ctl-privkey.pem \
+    % osken-manager --ctl-privkey ctl-privkey.pem \
                   --ctl-cert ctl-cert.pem \
                   --ca-certs /usr/local/var/lib/openvswitch/pki/switchca/cacert.pem \
                   --verbose

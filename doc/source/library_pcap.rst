@@ -5,7 +5,7 @@ PCAP file library
 Introduction
 ============
 
-Ryu PCAP file library helps you to read/write PCAP file which file
+OS-Ken PCAP file library helps you to read/write PCAP file which file
 format are described in `The Wireshark Wiki`_.
 
 .. _The Wireshark Wiki: https://wiki.wireshark.org/Development/LibpcapFileFormat

@@ -20,9 +20,9 @@ VRRPManager creates/deletes VRRPRouter, VRRPInterfaceMonitor
 dynamically as requested.
 
 Usage example
-PYTHONPATH=. ./bin/ryu-manager --verbose \
-             ryu.services.protocols.vrrp.manager \
-             ryu.services.protocols.vrrp.dumper
+osken-manager --verbose \
+    ryu.services.protocols.vrrp.manager \
+    ryu.services.protocols.vrrp.dumper
 """
 
 import time

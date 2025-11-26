@@ -5,7 +5,7 @@ Packet library
 Introduction
 ============
 
-Ryu packet library helps you to parse and build various protocol
+OS-Ken packet library helps you to parse and build various protocol
 packets. dpkt is the popular library for the same purpose, however it
 is not designed to handle protocols that are interleaved; vlan, mpls,
 gre, etc. So we implemented our own packet library.
@@ -24,9 +24,9 @@ First, let's look at how we can use the library to parse the received
 packets in a handler for OFPPacketIn messages.
 
 .. code-block:: python
-       
+
     from ryu.lib.packet import packet
-    
+
     @handler.set_ev_cls(ofp_event.EventOFPPacketIn, handler.MAIN_DISPATCHER)
     def packet_in_handler(self, ev):
         pkt = packet.Packet(array.array('B', ev.msg.data))
@@ -55,9 +55,9 @@ You can access to a specific protocol class instance by using the
 packet class iterator.  Let's try to check VLAN id if VLAN is used:
 
 .. code-block:: python
-       
+
     from ryu.lib.packet import packet
-    
+
     @handler.set_ev_cls(ofp_event.EventOFPPacketIn, handler.MAIN_DISPATCHER)
     def packet_in_handler(self, ev):
         pkt = packet.Packet(array.array('B', ev.msg.data))

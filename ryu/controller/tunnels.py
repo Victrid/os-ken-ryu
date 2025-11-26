@@ -22,16 +22,16 @@ from ryu.base import app_manager
 from ryu.controller import event
 
 
-class RemoteDPIDAlreadyExist(ryu_exc.RyuException):
+class RemoteDPIDAlreadyExist(ryu_exc.OSKenException):
     message = ('port (%(dpid)s, %(port)s) has already '
                'remote dpid %(remote_dpid)s')
 
 
-class TunnelKeyAlreadyExist(ryu_exc.RyuException):
+class TunnelKeyAlreadyExist(ryu_exc.OSKenException):
     message = 'tunnel key %(tunnel_key)s already exists'
 
 
-class TunnelKeyNotFound(ryu_exc.RyuException):
+class TunnelKeyNotFound(ryu_exc.OSKenException):
     message = 'no tunnel key for network %(network_id)s'
 
 

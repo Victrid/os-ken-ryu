@@ -1,5 +1,4 @@
-# Copyright (C) 2011, 2012 Nippon Telegraph and Telephone Corporation.
-# Copyright (C) 2011 Isaku Yamahata <yamahata at valinux co jp>
+# Copyright (c) 2013 Hewlett-Packard Development Company, L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,10 +14,8 @@
 # limitations under the License.
 
 import setuptools
-import ryu.hooks
 
 
-ryu.hooks.save_orig()
-setuptools.setup(name='ryu',
-                 setup_requires=['pbr'],
-                 pbr=True)
+setuptools.setup(
+    setup_requires=['pbr'],
+    pbr=True)

@@ -18,10 +18,10 @@
 sample router manager.
 (un-)instantiate routers
 Usage example:
-PYTHONPATH=. ./bin/ryu-manager --verbose \
-             ryu.services.protocols.vrrp.manager \
-             ryu.services.protocols.vrrp.dumper \
-             ryu.services.protocols.vrrp.sample_manager
+osken-manager --verbose \
+    ryu.services.protocols.vrrp.manager \
+    ryu.services.protocols.vrrp.dumper \
+    ryu.services.protocols.vrrp.sample_manager
 """
 
 from ryu.base import app_manager

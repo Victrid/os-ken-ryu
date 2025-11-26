@@ -17,7 +17,7 @@
 """
 Implementation of Bidirectional Forwarding Detection for IPv4 (Single Hop)
 
-This module provides a simple way to let Ryu act like a daemon for running
+This module provides a simple way to let OSKen act like a daemon for running
 IPv4 single hop BFD (RFC5881).
 
 Please note that:
@@ -37,14 +37,12 @@ import logging
 import time
 import random
 
-import six
-
 from ryu.base import app_manager
 from ryu.controller import event
 from ryu.controller import ofp_event
 from ryu.controller.handler import CONFIG_DISPATCHER, MAIN_DISPATCHER
 from ryu.controller.handler import set_ev_cls
-from ryu.exception import RyuException
+from ryu.exception import OSKenException
 from ryu.ofproto.ether import ETH_TYPE_IP, ETH_TYPE_ARP
 from ryu.ofproto import ofproto_v1_3
 from ryu.ofproto import inet
@@ -231,7 +229,7 @@ class BFDSession(object):
         BFD packet receiver.
         """
         LOG.debug("[BFD][%s][RECV] BFD Control received: %s",
-                  hex(self._local_discr), six.binary_type(bfd_pkt))
+                  hex(self._local_discr), bytes(bfd_pkt))
         self._remote_discr = bfd_pkt.my_discr
         self._remote_state = bfd_pkt.state
         self._remote_demand_mode = bfd_pkt.flags & bfd.BFD_FLAG_DEMAND
@@ -517,7 +515,7 @@ class BFDPacket(object):
     Ethernet, IPv4, and UDP headers.
     """
 
-    class BFDUnknownFormat(RyuException):
+    class BFDUnknownFormat(OSKenException):
         message = '%(msg)s'
 
     @staticmethod
@@ -589,7 +587,7 @@ class ARPPacket(object):
     Ethernet header.
     """
 
-    class ARPUnknownFormat(RyuException):
+    class ARPUnknownFormat(OSKenException):
         message = '%(msg)s'
 
     @staticmethod

@@ -16,31 +16,33 @@
 
 r"""
 Usage:
-PYTHONPATH=. ./bin/ryu-manager --verbose \
-             ryu.topology.switches \
-             ryu.tests.integrated.test_vrrp_multi \
-             ryu.services.protocols.vrrp.dumper
+osken-manager --verbose \
+    ryu.topology.switches \
+    ryu.tests.integrated.test_vrrp_multi \
+    ryu.services.protocols.vrrp.dumper
 
 ryu.services.protocols.vrrp.dumper is optional.
 
          +---+          ----------------
       /--|OVS|<--veth-->|              |
-   Ryu   +---+          | linux bridge |<--veth--> command to generate packets
+   OSKen   +---+          | linux bridge |<--veth--> command to generate packets
       \--|OVS|<--veth-->|              |
          +---+          ----------------
 
 configure OVSs to connect ryu
 example
-# brctl addbr b0
+# ip link add br0 type bridge
 # ip link add veth0-ovs type veth peer name veth0-br
 # ip link add veth1-ovs type veth peer name veth1-br
-# brctl addif b0 veth0-br
-# brctl addif b0 veth1-br
-# brctl show
-bridge name     bridge id               STP enabled     interfaces
-b0              8000.6642e5822497       no              veth0-br
-                                                        veth1-br
-ovs-system              0000.122038293b55       no
+# ip link set dev veth0-br master b0
+# ip link set dev veth1-br master b0
+# ip link show type bridge
+22: b0: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN mode DEFAULT group default qlen 1000
+    link/ether d6:97:42:8a:55:0e brd ff:ff:ff:ff:ff:ff
+
+# bridge link show
+23: veth0-br state DOWN @veth0-ovs: <BROADCAST,MULTICAST> mtu 1500 master b0 state disabled priority 32 cost 2
+24: veth1-br state DOWN @veth1-ovs: <BROADCAST,MULTICAST> mtu 1500 master b0 state disabled priority 32 cost 2
 
 # ovs-vsctl add-br s0
 # ovs-vsctl add-port s0 veth0-ovs

@@ -25,7 +25,6 @@ from copy import copy
 import logging
 import functools
 import netaddr
-import six
 
 from ryu.lib.packet.bgp import RF_IPv4_UC
 from ryu.lib.packet.bgp import RouteTargetMembershipNLRI
@@ -44,8 +43,7 @@ from ryu.services.protocols.bgp.processor import BPR_UNKNOWN
 LOG = logging.getLogger('bgpspeaker.info_base.base')
 
 
-@six.add_metaclass(ABCMeta)
-class Table(object):
+class Table(object, metaclass=abc.ABCMeta):
     """A container for holding information about destination/prefixes.
 
     Routing information base for a particular afi/safi.
@@ -276,8 +274,7 @@ class NonVrfPathProcessingMixin(object):
                 self._sent_routes = {}
 
 
-@six.add_metaclass(ABCMeta)
-class Destination(object):
+class Destination(object, metaclass=abc.ABCMeta):
     """State about a particular destination.
 
     For example, an IP prefix. This is the data-structure that is hung of the
@@ -431,7 +428,7 @@ class Destination(object):
         Returns *True* if any of the known paths were found to be old and
         removed/deleted.
         """
-        assert(source and hasattr(source, 'version_num'))
+        assert (source and hasattr(source, 'version_num'))
         removed_paths = []
         # Iterate over the paths in reverse order as we want to delete paths
         # whose source is this peer.
@@ -441,7 +438,7 @@ class Destination(object):
             if (path.source == source and
                     path.source_version_num < source_ver_num):
                 # If this peer is source of any paths, remove those path.
-                del(self._known_path_list[path_idx])
+                del self._known_path_list[path_idx]
                 removed_paths.append(path)
         return removed_paths
 
@@ -488,7 +485,7 @@ class Destination(object):
             # If we do not have any old but one new path
             # it becomes best path.
             self._known_path_list.append(self._new_path_list[0])
-            del(self._new_path_list[0])
+            del self._new_path_list[0]
             return self._known_path_list[0], BPR_ONLY_PATH
 
         # If we have a new version of old/known path we use it and delete old
@@ -499,7 +496,7 @@ class Destination(object):
         self._known_path_list.extend(self._new_path_list)
 
         # Clear new paths as we copied them.
-        del(self._new_path_list[:])
+        del self._new_path_list[:]
 
         # If we do not have any paths to this destination, then we do not have
         # new best path.
@@ -531,7 +528,7 @@ class Destination(object):
         if not self._known_path_list:
             LOG.debug('Found %s withdrawals for path(s) that did not get'
                       ' installed.', len(self._withdraw_list))
-            del(self._withdraw_list[:])
+            del self._withdraw_list[:]
             return
 
         # If we have some known paths and some withdrawals, we find matches and
@@ -688,8 +685,7 @@ class Destination(object):
         return str(self) >= str(other)
 
 
-@six.add_metaclass(ABCMeta)
-class Path(object):
+class Path(object, metaclass=abc.ABCMeta):
     """Represents a way of reaching an IP destination.
 
     Also contains other meta-data given to us by a specific source (such as a
@@ -861,8 +857,7 @@ class Path(object):
             self._path_attr_map, self._nexthop, self._is_withdraw))
 
 
-@six.add_metaclass(ABCMeta)
-class Filter(object):
+class Filter(object, metaclass=abc.ABCMeta):
     """Represents a general filter for in-bound and out-bound filter
 
     ================ ==================================================
@@ -1198,7 +1193,7 @@ class AttributeMap(object):
 
     def __init__(self, filters, attr_type, attr_value):
 
-        assert all(isinstance(f, Filter) for f in filters),\
+        assert all(isinstance(f, Filter) for f in filters), \
             'all the items in filters must be an instance of Filter sub-class'
         self.filters = filters
         self.attr_type = attr_type

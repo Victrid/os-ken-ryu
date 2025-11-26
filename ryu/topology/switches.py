@@ -14,7 +14,6 @@
 # limitations under the License.
 
 import logging
-import six
 import struct
 import time
 from ryu import cfg
@@ -25,7 +24,7 @@ from ryu.base import app_manager
 from ryu.controller import ofp_event
 from ryu.controller.handler import set_ev_cls
 from ryu.controller.handler import MAIN_DISPATCHER, DEAD_DISPATCHER
-from ryu.exception import RyuException
+from ryu.exception import OSKenException
 from ryu.lib import addrconv, hub
 from ryu.lib.mac import DONTCARE_STR
 from ryu.lib.dpid import dpid_to_str, str_to_dpid
@@ -428,7 +427,7 @@ class LLDPPacket(object):
     PORT_ID_STR = '!I'      # uint32_t
     PORT_ID_SIZE = 4
 
-    class LLDPUnknownFormat(RyuException):
+    class LLDPUnknownFormat(OSKenException):
         message = '%(msg)s'
 
     @staticmethod
@@ -465,11 +464,11 @@ class LLDPPacket(object):
     def lldp_parse(data):
         pkt = packet.Packet(data)
         i = iter(pkt)
-        eth_pkt = six.next(i)
-        assert type(eth_pkt) == ethernet.ethernet
+        eth_pkt = next(i)
+        assert isinstance(eth_pkt, ethernet.ethernet)
 
-        lldp_pkt = six.next(i)
-        if type(lldp_pkt) != lldp.lldp:
+        lldp_pkt = next(i)
+        if not isinstance(lldp_pkt, lldp.lldp):
             raise LLDPPacket.LLDPUnknownFormat()
 
         tlv_chassis_id = lldp_pkt.tlvs[0]

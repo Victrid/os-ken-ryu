@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 
 from ryu.services.protocols.bgp.base import ActivityException
 from ryu.services.protocols.bgp.operator.command import Command

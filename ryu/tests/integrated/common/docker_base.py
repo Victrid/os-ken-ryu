@@ -16,16 +16,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import absolute_import
-
 import itertools
 import logging
 import os
+import re
 import subprocess
 import time
 
 import netaddr
-import six
+
 
 LOG = logging.getLogger(__name__)
 
@@ -115,8 +114,8 @@ class Command(object):
                                stdout=p_stdout,
                                stderr=p_stderr)
         __stdout, __stderr = pop.communicate()
-        _stdout = six.text_type(__stdout, 'utf-8')
-        _stderr = six.text_type(__stderr, 'utf-8')
+        _stdout = str(__stdout, 'utf-8')
+        _stderr = str(__stderr, 'utf-8')
         out = CommandOut(_stdout, _stderr, cmd, pop.returncode)
         return out
 
@@ -141,12 +140,12 @@ class Command(object):
 
 
 class DockerImage(object):
-    def __init__(self, baseimage='ubuntu:16.04'):
+    def __init__(self, baseimage='ubuntu:20.04'):
         self.baseimage = baseimage
         self.cmd = Command()
 
     def get_images(self):
-        out = self.cmd.sudo('sudo docker images')
+        out = self.cmd.sudo('docker images')
         images = []
         for line in out.splitlines()[1:]:
             images.append(line.split()[0])
@@ -156,9 +155,14 @@ class DockerImage(object):
         return name in self.get_images()
 
     def build(self, tagname, dockerfile_dir):
-        self.cmd.sudo(
-            "docker build -t {0} {1}".format(tagname, dockerfile_dir),
-            try_times=3)
+        try:
+            self.cmd.sudo(
+                'docker build -t {0} {1}'.format(tagname, dockerfile_dir))
+        except CommandError:
+            self.cmd.sudo('docker builder prune -f')
+            self.cmd.sudo(
+                'docker build -t {0} {1}'.format(tagname, dockerfile_dir),
+                try_times=2)
 
     def remove(self, tagname, check_exist=False):
         if check_exist and not self.exist(tagname):
@@ -172,7 +176,7 @@ class DockerImage(object):
         pkges = ' '.join([
             'telnet',
             'tcpdump',
-            'quagga',
+            'quagga-bgpd',
         ])
         if image:
             use_image = image
@@ -182,7 +186,13 @@ class DockerImage(object):
         c << 'FROM %s' % use_image
         c << 'RUN apt-get update'
         c << 'RUN apt-get install -qy --no-install-recommends %s' % pkges
-        c << 'CMD /usr/lib/quagga/bgpd'
+        c << 'RUN echo "#!/bin/sh" > /bgpd'
+        c << 'RUN echo mkdir -p /run/quagga >> /bgpd'
+        c << 'RUN echo chmod 755 /run/quagga >> /bgpd'
+        c << 'RUN echo chown quagga:quagga /run/quagga >> /bgpd'
+        c << 'RUN echo exec /usr/sbin/bgpd >> /bgpd'
+        c << 'RUN chmod +x /bgpd'
+        c << 'CMD /bgpd'
 
         self.cmd.sudo('rm -rf %s' % workdir)
         self.cmd.execute('mkdir -p %s' % workdir)
@@ -214,8 +224,8 @@ class DockerImage(object):
             # might fail if the current directory contains the symlink to
             # Docker host file systems.
             '&& rm -rf *.egg-info/ build/ dist/ .tox/ *.log'
-            '&& pip install -r tools/pip-requires -r tools/optional-requires',
-            '&& python setup.py install',
+            '&& pip install -r requirements.txt -r test-requirements.txt',
+            '&& pip install .',
         ])
         c << install
 
@@ -319,11 +329,13 @@ class Bridge(object):
         return bridges
 
     def get_bridges_brctl(self):
-        out = self.execute('brctl show', retry=True)
-        bridges = []
-        for line in out.splitlines()[1:]:
-            bridges.append(line.split()[0])
-        return bridges
+        br_list = []
+        bridges = glob.glob('/sys/class/net/*/bridge/bridge_id')
+        regex = re.compile(r"\/sys\/class\/net\/(.+)\/bridge\/bridge_id")
+        for bridge in bridges:
+            m = regex.match(bridge)
+            br_list.append(m.group(1))
+        return br_list
 
     def get_bridges_ovs(self):
         out = self.execute('ovs-vsctl list-br', sudo=True, retry=True)

@@ -16,18 +16,18 @@
 
 r"""
 Usage:
-PYTHONPATH=. ./bin/ryu-manager --verbose \
-             ryu.services.protocols.vrrp.dumper \
-             ryu.services.protocols.vrrp.sample_manager.py \
-             ryu.tests.integrated.test_vrrp_linux_multi \
-             ryu.app.rest
+osken-manager --verbose \
+    ryu.services.protocols.vrrp.dumper \
+    ryu.services.protocols.vrrp.sample_manager.py \
+    ryu.tests.integrated.test_vrrp_linux_multi \
+    ryu.app.rest
 
 ryu.services.protocols.vrrp.dumper is optional.
-ryu.app.rest is merely to prevent ryu-manager from exiting.
+ryu.app.rest is merely to prevent osken-manager from exiting.
 
                     ----------------
       /--<--veth0-->|              |
-   Ryu              | linux bridge |<--veth2--> command to generate packets
+   OSKen            | linux bridge |<--veth2--> command to generate packets
       \--<--veth1-->|   (vrrpbr)   |
                     ----------------
 
@@ -36,11 +36,10 @@ ryu.app.rest is merely to prevent ryu-manager from exiting.
 # ip link add veth1 type veth peer name veth1-br
 # ip link add veth2 type veth peer name veth2-br
 
-# brctl addbr vrrpbr
-# brctl addif vrrpbr veth0-br
-# brctl addif vrrpbr veth1-br
-# brctl addif vrrpbr veth2-br
-
+# ip link add vrrpbr type bridge
+# ip link set dev veth0-br master vrrpbr
+# ip link set dev veth1-br master vrrpbr
+# ip link set dev veth2-br master vrrpbr
 
 # ip link set veth0 up
 # ip link set veth0-br up

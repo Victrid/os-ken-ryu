@@ -33,7 +33,7 @@ Then run linc
 # rel/linc/bin/linc console
 
 Then run ryu
-# PYTHONPATH=. ./bin/ryu-manager --verbose \
+# osken-manager --verbose \
         ryu/tests/integrated/test_of_config.py
 
 
@@ -109,8 +109,6 @@ Here is my sys.config used for this test.
 -->8-->8-->8-->8-->8-->8-->8-->8-->8-->8-->8-->8-->8--
 
 """
-
-from __future__ import print_function
 
 import traceback
 
@@ -237,7 +235,7 @@ class OFConfigClient(app_manager.RyuApp):
         self._validate(tree)
 
         name_spaces = set()
-        for e in tree.getiterator():
+        for e in tree.iter():
             name_spaces.add(capable_switch.get_ns_tag(e.tag)[0])
         print(name_spaces)
 

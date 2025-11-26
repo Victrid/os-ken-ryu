@@ -21,8 +21,6 @@ Decoder/Encoder implementations of OpenFlow 1.2.
 import struct
 import base64
 
-import six
-
 from ryu.lib import addrconv
 from ryu.lib import mac
 from ryu.lib.pack_utils import msg_pack_into
@@ -69,7 +67,7 @@ class OFPHello(MsgBase):
     When connection is started, the hello message is exchanged between a
     switch and a controller.
 
-    This message is handled by the Ryu framework, so the Ryu application
+    This message is handled by the OSKen framework, so the OSKen application
     do not need to process this typically.
     """
 
@@ -141,7 +139,7 @@ class OFPErrorMsg(MsgBase):
         super(OFPErrorMsg, self).__init__(datapath)
         self.type = type_
         self.code = code
-        if isinstance(data, six.string_types):
+        if isinstance(data, str):
             data = data.encode('ascii')
         self.data = data
         if self.type == ofproto.OFPET_EXPERIMENTER:
@@ -150,7 +148,7 @@ class OFPErrorMsg(MsgBase):
 
     @classmethod
     def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
-        type_, = struct.unpack_from('!H', six.binary_type(buf),
+        type_, = struct.unpack_from('!H', bytes(buf),
                                     ofproto.OFP_HEADER_SIZE)
         msg = super(OFPErrorMsg, cls).parser(datapath, version, msg_type,
                                              msg_len, xid, buf)
@@ -208,7 +206,7 @@ class OFPEchoRequest(MsgBase):
     """
     Echo request message
 
-    This message is handled by the Ryu framework, so the Ryu application
+    This message is handled by the OSKen framework, so the OSKen application
     do not need to process this typically.
 
     ========== =========================================================
@@ -254,7 +252,7 @@ class OFPEchoReply(MsgBase):
     """
     Echo reply message
 
-    This message is handled by the Ryu framework, so the Ryu application
+    This message is handled by the OSKen framework, so the OSKen application
     do not need to process this typically.
 
     ========== =========================================================
@@ -348,7 +346,7 @@ class OFPPort(ofproto_parser.namedtuple('OFPPort', (
     hw_addr    MAC address for the port.
     name       Null-terminated string containing a human-readable name
                for the interface.
-    config     Bitmap of port configration flags.
+    config     Bitmap of port configuration flags.
 
                | OFPPC_PORT_DOWN
                | OFPPC_NO_RECV
@@ -398,7 +396,7 @@ class OFPFeaturesRequest(MsgBase):
     The controller sends a feature request to the switch upon session
     establishment.
 
-    This message is handled by the Ryu framework, so the Ryu application
+    This message is handled by the OSKen framework, so the OSKen application
     do not need to process this typically.
 
     Example::
@@ -423,7 +421,7 @@ class OFPSwitchFeatures(MsgBase):
     The switch responds with a features reply message to a features
     request.
 
-    This message is handled by the Ryu framework, so the Ryu application
+    This message is handled by the OSKen framework, so the OSKen application
     do not need to process this typically.
 
     Example::
@@ -1612,7 +1610,7 @@ class OFPActionSetField(OFPAction):
             assert len(kwargs) == 1
             key = list(kwargs.keys())[0]
             value = kwargs[key]
-            assert isinstance(key, (str, six.text_type))
+            assert isinstance(key, (str, str))
             assert not isinstance(value, tuple)  # no mask
             self.key = key
             self.value = value
@@ -1675,7 +1673,7 @@ class OFPActionSetField(OFPAction):
         # serialize and parse to fill old attributes
         buf = bytearray()
         o.serialize(buf, 0)
-        return OFPActionSetField.parser(six.binary_type(buf), 0)
+        return OFPActionSetField.parser(bytes(buf), 0)
 
     # XXX old api compat
     def __str__(self):
@@ -1686,7 +1684,7 @@ class OFPActionSetField(OFPAction):
             # serialize and parse to fill new fields
             buf = bytearray()
             o2.serialize(buf, 0)
-            o = OFPActionSetField.parser(six.binary_type(buf), 0)
+            o = OFPActionSetField.parser(bytes(buf), 0)
         else:
             o = self
         return super(OFPActionSetField, o).__str__()
@@ -3597,7 +3595,7 @@ class OFPMatch(StringifyMixin):
             # serialize and parse to fill OFPMatch._fields2
             buf = bytearray()
             o2.serialize(buf, 0)
-            o = OFPMatch.parser(six.binary_type(buf), 0)
+            o = OFPMatch.parser(bytes(buf), 0)
         else:
             o = self
 
@@ -3622,7 +3620,7 @@ class OFPMatch(StringifyMixin):
         # serialize and parse to fill OFPMatch.fields
         buf = bytearray()
         o.serialize(buf, 0)
-        return OFPMatch.parser(six.binary_type(buf), 0)
+        return OFPMatch.parser(bytes(buf), 0)
 
     def __str__(self):
         # XXX old api compat
@@ -3633,7 +3631,7 @@ class OFPMatch(StringifyMixin):
             # serialize and parse to fill OFPMatch._fields2
             buf = bytearray()
             o2.serialize(buf, 0)
-            o = OFPMatch.parser(six.binary_type(buf), 0)
+            o = OFPMatch.parser(bytes(buf), 0)
         else:
             o = self
         return super(OFPMatch, o).__str__()

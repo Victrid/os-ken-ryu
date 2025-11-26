@@ -5,7 +5,7 @@ MRT file library
 Introduction
 ============
 
-Ryu MRT file library helps you to read/write MRT
+OS-Ken MRT file library helps you to read/write MRT
 (Multi-Threaded Routing Toolkit) Routing Information Export Format
 [`RFC6396`_].
 

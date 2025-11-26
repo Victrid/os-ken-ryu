@@ -15,11 +15,11 @@
 # limitations under the License.
 
 """
-The central management of Ryu applications.
+The central management of OSKen applications.
 
-- Load Ryu applications
-- Provide `contexts` to Ryu applications
-- Route messages among Ryu applications
+- Load OSKen applications
+- Provide `contexts` to OSKen applications
+- Route messages among OSKen applications
 
 """
 
@@ -32,7 +32,6 @@ import gc
 
 from ryu import cfg
 from ryu import utils
-from ryu.app import wsgi
 from ryu.controller.handler import register_instance, get_dependent_services
 from ryu.controller.controller import Datapath
 from ryu.controller import event
@@ -90,22 +89,22 @@ def require_app(app_name, api_style=False):
 
 class RyuApp(object):
     """
-    The base class for Ryu applications.
+    The base class for OSKen applications.
 
-    RyuApp subclasses are instantiated after ryu-manager loaded
-    all requested Ryu application modules.
+    RyuApp subclasses are instantiated after osken-manager loaded
+    all requested OSKen application modules.
     __init__ should call RyuApp.__init__ with the same arguments.
     It's illegal to send any events in __init__.
 
     The instance attribute 'name' is the name of the class used for
-    message routing among Ryu applications.  (Cf. send_event)
+    message routing among OSKen applications.  (Cf. send_event)
     It's set to __class__.__name__ by RyuApp.__init__.
     It's discouraged for subclasses to override this.
     """
 
     _CONTEXTS = {}
     """
-    A dictionary to specify contexts which this Ryu application wants to use.
+    A dictionary to specify contexts which this OSKen application wants to use.
     Its key is a name of context and its value is an ordinary class
     which implements the context.  The class is instantiated by app_manager
     and the instance is shared among RyuApp subclasses which has _CONTEXTS
@@ -139,7 +138,7 @@ class RyuApp(object):
         OFP_VERSIONS = [ofproto_v1_0.OFP_VERSION,
                         ofproto_v1_2.OFP_VERSION]
 
-    If multiple Ryu applications are loaded in the system,
+    If multiple OSKen applications are loaded in the system,
     the intersection of their OFP_VERSIONS is used.
     """
 
@@ -265,7 +264,7 @@ class RyuApp(object):
     def send_request(self, req):
         """
         Make a synchronous request.
-        Set req.sync to True, send it to a Ryu application specified by
+        Set req.sync to True, send it to a OSKen application specified by
         req.dst, and block until receiving a reply.
         Returns the received reply.
         The argument should be an instance of EventRequestBase.
@@ -354,7 +353,7 @@ class AppManager(object):
 
     @staticmethod
     def run_apps(app_lists):
-        """Run a set of Ryu applications
+        """Run a set of OSKen applications
 
         A convenient method to load and instantiate apps.
         This blocks until all relevant apps stop.
@@ -363,9 +362,6 @@ class AppManager(object):
         app_mgr.load_apps(app_lists)
         contexts = app_mgr.create_contexts()
         services = app_mgr.instantiate_apps(**contexts)
-        webapp = wsgi.start_service(app_mgr)
-        if webapp:
-            services.append(hub.spawn(webapp))
         try:
             hub.joinall(services)
         finally:

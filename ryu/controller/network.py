@@ -26,7 +26,7 @@ from ryu.exception import PortAlreadyExist, PortNotFound, PortUnknown
 NW_ID_UNKNOWN = '__NW_ID_UNKNOWN__'
 
 
-class MacAddressAlreadyExist(ryu_exc.RyuException):
+class MacAddressAlreadyExist(ryu_exc.OSKenException):
     message = 'port (%(dpid)s, %(port)s) has already mac %(mac_address)s'
 
 

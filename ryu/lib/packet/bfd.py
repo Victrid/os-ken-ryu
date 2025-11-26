@@ -75,14 +75,12 @@ format of types:
        |                              ...                              |
        +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 """
-import binascii
+
 import hashlib
-import random
-import six
+import operator
 import struct
 
 from . import packet_base
-from ryu.lib import addrconv
 from ryu.lib import stringify
 
 BFD_STATE_ADMIN_DOWN = 0
@@ -162,14 +160,13 @@ class bfd(packet_base.PacketBase):
                                    session state.
     state                          The current BFD session state as seen by
                                    the transmitting system.
-    flags                          Bitmap of the following flags.
-
-                                   | BFD_FLAG_POLL
-                                   | BFD_FLAG_FINAL
-                                   | BFD_FLAG_CTRL_PLANE_INDEP
-                                   | BFD_FLAG_AUTH_PRESENT
-                                   | BFD_FLAG_DEMAND
-                                   | BFD_FLAG_MULTIPOINT
+    flags                          Bitmap of the following flags:
+                                   ``BFD_FLAG_POLL``,
+                                   ``BFD_FLAG_FINAL``,
+                                   ``BFD_FLAG_CTRL_PLANE_INDEP``,
+                                   ``BFD_FLAG_AUTH_PRESENT``,
+                                   ``BFD_FLAG_DEMAND``,
+                                   ``BFD_FLAG_MULTIPOINT``
     detect_mult                    Detection time multiplier.
     my_discr                       My Discriminator.
     your_discr                     Your Discriminator.
@@ -239,7 +236,7 @@ class bfd(packet_base.PacketBase):
         flags = flags & 0x3f
 
         if flags & BFD_FLAG_AUTH_PRESENT:
-            auth_type = six.indexbytes(buf, cls._PACK_STR_LEN)
+            auth_type = operator.getitem(buf, cls._PACK_STR_LEN)
             auth_cls = cls._auth_parsers[auth_type].\
                 parser(buf[cls._PACK_STR_LEN:])[0]
         else:
@@ -395,7 +392,7 @@ class SimplePassword(BFDAuth):
         (auth_type, auth_len) = cls.parser_hdr(buf)
         assert auth_type == cls.auth_type
 
-        auth_key_id = six.indexbytes(buf, cls._PACK_HDR_STR_LEN)
+        auth_key_id = operator.getitem(buf, cls._PACK_HDR_STR_LEN)
 
         password = buf[cls._PACK_HDR_STR_LEN + cls._PACK_STR_LEN:auth_len]
 

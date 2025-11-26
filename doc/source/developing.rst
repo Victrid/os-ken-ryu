@@ -1,6 +1,6 @@
-****************************
-Writing Your Ryu Application
-****************************
+*******************************
+Writing Your OS-Ken Application
+*******************************
 
 .. toctree::
    :maxdepth: 2

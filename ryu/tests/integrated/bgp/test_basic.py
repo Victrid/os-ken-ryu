@@ -14,8 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import absolute_import
-
 import time
 
 from ryu.tests.integrated.common import docker_base as ctn_base
@@ -24,7 +22,7 @@ from . import base
 
 class BgpSpeakerBasicTest(base.BgpSpeakerTestBase):
     def setUp(self):
-        super(BgpSpeakerBasicTest, self).setUp()
+        super().setUp()
         self.r1.stop_ryubgp(retry=True)
         self.r1.start_ryubgp(retry=True)
 

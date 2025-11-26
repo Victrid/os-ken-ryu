@@ -1,7 +1,7 @@
 .. _api_ref:
 
 *******************************
-Ryu API Reference
+OS-Ken API Reference
 *******************************
 
 .. XXX list all members explicitly to workaround a sphinx bug

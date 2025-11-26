@@ -106,7 +106,7 @@ OFPP_FLOOD = 0xfffffffb         # All physical ports except input port and
 OFPP_ALL = 0xfffffffc           # All physical ports except input port.
 OFPP_CONTROLLER = 0xfffffffd    # Send to controller.
 OFPP_LOCAL = 0xfffffffe         # Local openflow "port".
-OFPP_ANY = 0xffffffff 	        # Not associated with a physical port.
+OFPP_ANY = 0xffffffff           # Not associated with a physical port.
 
 # All ones is used to indicate all queues in a port (for stats retrieval).
 OFPQ_ALL = 0xffffffff
@@ -1062,7 +1062,7 @@ OFPQOFC_EPERM = 2           # Permissions error.
 OFPSCFC_BAD_FLAGS = 0       # Specified flags is invalid.
 OFPSCFC_BAD_LEN = 1         # Specified len is invalid.
 OFPQCFC_EPERM = 2           # Permissions error (depracated).
-                            # New or updated Ryu applications shall use
+                            # New or updated OSKen applications shall use
                             # OFPSCFC_EPERM. The variable name is a typo of
                             # in specifications before v1.3.1 (EXT-208).
 OFPSCFC_EPERM = 2           # Permissions error.
@@ -1229,6 +1229,15 @@ oxm_types = [
     # EXT-233 Output match Extension
     # NOTE(yamamoto): The spec says uint64_t but I assume it's an error.
     oxm_fields.ONFExperimenter('actset_output', 43, type_desc.Int4),
+    # Support for matching/setting xreg0-7
+    oxm_fields.PacketRegs('xreg0', 0, type_desc.Int8),
+    oxm_fields.PacketRegs('xreg1', 1, type_desc.Int8),
+    oxm_fields.PacketRegs('xreg2', 2, type_desc.Int8),
+    oxm_fields.PacketRegs('xreg3', 3, type_desc.Int8),
+    oxm_fields.PacketRegs('xreg4', 4, type_desc.Int8),
+    oxm_fields.PacketRegs('xreg5', 5, type_desc.Int8),
+    oxm_fields.PacketRegs('xreg6', 6, type_desc.Int8),
+    oxm_fields.PacketRegs('xreg7', 7, type_desc.Int8),
 ] + nicira_ext.oxm_types
 
 oxm_fields.generate(__name__)

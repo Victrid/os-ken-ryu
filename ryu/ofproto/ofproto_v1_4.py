@@ -160,20 +160,20 @@ OFPTMPEF_LIFETIME = 1 << 2      # Using flow entry lifetime.
 # struct ofp_table_mod_prop_eviction
 OFP_TABLE_MOD_PROP_EVICTION_PACK_STR = '!HHI'
 OFP_TABLE_MOD_PROP_EVICTION_SIZE = 8
-assert(calcsize(OFP_TABLE_MOD_PROP_EVICTION_PACK_STR) ==
-       OFP_TABLE_MOD_PROP_EVICTION_SIZE)
+assert (calcsize(OFP_TABLE_MOD_PROP_EVICTION_PACK_STR) ==
+        OFP_TABLE_MOD_PROP_EVICTION_SIZE)
 
 # struct ofp_table_mod_prop_vacancy
 OFP_TABLE_MOD_PROP_VACANCY_PACK_STR = '!HHBBBx'
 OFP_TABLE_MOD_PROP_VACANCY_SIZE = 8
-assert(calcsize(OFP_TABLE_MOD_PROP_VACANCY_PACK_STR) ==
-       OFP_TABLE_MOD_PROP_VACANCY_SIZE)
+assert (calcsize(OFP_TABLE_MOD_PROP_VACANCY_PACK_STR) ==
+        OFP_TABLE_MOD_PROP_VACANCY_SIZE)
 
 # struct ofp_table_mod_prop_experimenter
 OFP_TABLE_MOD_PROP_EXPERIMENTER_PACK_STR = '!HHII'
 OFP_TABLE_MOD_PROP_EXPERIMENTER_SIZE = 12
-assert(calcsize(OFP_TABLE_MOD_PROP_EXPERIMENTER_PACK_STR) ==
-       OFP_TABLE_MOD_PROP_EXPERIMENTER_SIZE)
+assert (calcsize(OFP_TABLE_MOD_PROP_EXPERIMENTER_PACK_STR) ==
+        OFP_TABLE_MOD_PROP_EXPERIMENTER_SIZE)
 
 # struct ofp_table_mod
 OFP_TABLE_MOD_PACK_STR = '!B3xI'
@@ -397,6 +397,15 @@ oxm_types = [
     # EXT-233 Output match Extension
     # NOTE(yamamoto): The spec says uint64_t but I assume it's an error.
     oxm_fields.ONFExperimenter('actset_output', 43, type_desc.Int4),
+    # Support for matching/setting xreg0-7
+    oxm_fields.PacketRegs('xreg0', 0, type_desc.Int8),
+    oxm_fields.PacketRegs('xreg1', 1, type_desc.Int8),
+    oxm_fields.PacketRegs('xreg2', 2, type_desc.Int8),
+    oxm_fields.PacketRegs('xreg3', 3, type_desc.Int8),
+    oxm_fields.PacketRegs('xreg4', 4, type_desc.Int8),
+    oxm_fields.PacketRegs('xreg5', 5, type_desc.Int8),
+    oxm_fields.PacketRegs('xreg6', 6, type_desc.Int8),
+    oxm_fields.PacketRegs('xreg7', 7, type_desc.Int8),
 ] + nicira_ext.oxm_types
 
 oxm_fields.generate(__name__)
@@ -1409,7 +1418,7 @@ OFPACPT_REQUESTFORWARD_SLAVE = 10       # RequestForward mask for slave.
 OFPACPT_REQUESTFORWARD_MASTER = 11      # RequestForward mask for master.
 OFPTFPT_EXPERIMENTER_SLAVE = 0xFFFE     # Experimenter for slave (depracated).
 OFPTFPT_EXPERIMENTER_MASTER = 0xFFFF    # Experimenter for master (depracated).
-                                        # New or updated Ryu applications shall use
+                                        # New or updated OSKen applications shall use
                                         # OFPACPT_EXPERIMENTER_SLAVE and OFPACPT_EXPERIMENTER_MASTER.
                                         # The variable name is a typo of in specifications before v1.5.0.
 OFPACPT_EXPERIMENTER_SLAVE = 0xFFFE     # Experimenter for slave.

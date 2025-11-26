@@ -48,7 +48,7 @@ class _Caller(object):
 # should be named something like 'observe_event'
 def set_ev_cls(ev_cls, dispatchers=None):
     """
-    A decorator for Ryu application to declare an event handler.
+    A decorator for OSKen application to declare an event handler.
 
     Decorated method will become an event handler.
     ev_cls is an event class whose instances this RyuApp wants to receive.
@@ -59,20 +59,20 @@ def set_ev_cls(ev_cls, dispatchers=None):
 
     .. tabularcolumns:: |l|L|
 
-    =========================================== ===============================
-    Negotiation phase                           Description
-    =========================================== ===============================
+    ============================================== ===============================
+    Negotiation phase                              Description
+    ============================================== ===============================
     ryu.controller.handler.HANDSHAKE_DISPATCHER Sending and waiting for hello
-                                                message
+                                                   message
     ryu.controller.handler.CONFIG_DISPATCHER    Version negotiated and sent
-                                                features-request message
+                                                   features-request message
     ryu.controller.handler.MAIN_DISPATCHER      Switch-features message
-                                                received and sent set-config
-                                                message
+                                                   received and sent set-config
+                                                   message
     ryu.controller.handler.DEAD_DISPATCHER      Disconnect from the peer.  Or
-                                                disconnecting due to some
-                                                unrecoverable errors.
-    =========================================== ===============================
+                                                   disconnecting due to some
+                                                   unrecoverable errors.
+    ============================================== ===============================
     """
     def _set_ev_cls_dec(handler):
         if 'callers' not in dir(handler):

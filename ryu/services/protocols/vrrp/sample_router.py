@@ -20,10 +20,10 @@ a template for router implementation that support VRRP
 Those routers needs to be created by someone else.
 sample_manager.routerManager is an example.
 Usage example:
-PYTHONPATH=. ./bin/ryu-manager --verbose \
-             ryu.services.protocols.vrrp.manager \
-             ryu.services.protocols.vrrp.dumper \
-             ryu.services.protocols.vrrp.sample_manager
+osken-manager --verbose \
+    ryu.services.protocols.vrrp.manager \
+    ryu.services.protocols.vrrp.dumper \
+    ryu.services.protocols.vrrp.sample_manager
 """
 
 import contextlib
@@ -355,7 +355,7 @@ class RouterIPV4Linux(RouterIPV4):
 
     def _disable_router(self):
         if self._arp_thread is not None:
-            self._arp_thread.kill()
+            hub.kill(self._arp_thread)
             hub.joinall([self._arp_thread])
             self._arp_thread = None
         # TODO: implement real routing logic

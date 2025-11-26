@@ -18,7 +18,7 @@
 The main component of OpenFlow controller.
 
 - Handle connections from switches
-- Generate and route events to appropriate entities like Ryu applications
+- Generate and route events to appropriate entities like OSKen applications
 
 """
 
@@ -166,22 +166,10 @@ class OpenFlowController(object):
 
     def server_loop(self, ofp_tcp_listen_port, ofp_ssl_listen_port):
         if CONF.ctl_privkey is not None and CONF.ctl_cert is not None:
-            if not hasattr(ssl, 'SSLContext'):
-                # anything less than python 2.7.9 supports only TLSv1
-                # or less, thus we choose TLSv1
-                ssl_args = {'ssl_version': ssl.PROTOCOL_TLSv1}
-            else:
-                # from 2.7.9 and versions 3.4+ ssl context creation is
-                # supported. Protocol_TLS from 2.7.13 and from 3.5.3
-                # replaced SSLv23. Functionality is similar.
-                if hasattr(ssl, 'PROTOCOL_TLS'):
-                    p = 'PROTOCOL_TLS'
-                else:
-                    p = 'PROTOCOL_SSLv23'
+            ssl_args = {'ssl_ctx': ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)}
 
-                ssl_args = {'ssl_ctx': ssl.SSLContext(getattr(ssl, p))}
-                # Restrict non-safe versions
-                ssl_args['ssl_ctx'].options |= ssl.OP_NO_SSLv3 | ssl.OP_NO_SSLv2
+            # Restrict non-safe versions
+            ssl_args['ssl_ctx'].options |= ssl.OP_NO_SSLv3 | ssl.OP_NO_SSLv2
 
             if CONF.ciphers is not None:
                 ssl_args['ciphers'] = CONF.ciphers

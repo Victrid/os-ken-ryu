@@ -21,14 +21,13 @@ Decoder/Encoder implementations of OpenFlow 1.4.
 import struct
 import base64
 
-import six
-
 from ryu.lib import addrconv
 from ryu.lib.pack_utils import msg_pack_into
 from ryu.lib.packet import packet
 from ryu import utils
 from ryu.ofproto.ofproto_parser import StringifyMixin, MsgBase, MsgInMsgBase
 from ryu.ofproto import ether
+from ryu.ofproto import nicira_ext
 from ryu.ofproto import nx_actions
 from ryu.ofproto import ofproto_parser
 from ryu.ofproto import ofproto_common
@@ -52,6 +51,15 @@ def _register_parser(cls):
     return cls
 
 
+def _register_exp_type(experimenter, exp_type):
+    assert exp_type not in OFPExperimenter._subtypes
+
+    def _wrapper(cls):
+        OFPExperimenter._subtypes[(experimenter, exp_type)] = cls
+        return cls
+    return _wrapper
+
+
 @ofproto_parser.register_msg_parser(ofproto.OFP_VERSION)
 def msg_parser(datapath, version, msg_type, msg_len, xid, buf):
     parser = _MSG_PARSERS.get(msg_type)
@@ -67,7 +75,7 @@ class OFPHello(MsgBase):
     When connection is started, the hello message is exchanged between a
     switch and a controller.
 
-    This message is handled by the Ryu framework, so the Ryu application
+    This message is handled by the OSKen framework, so the OSKen application
     do not need to process this typically.
 
     ========== =========================================================
@@ -155,7 +163,7 @@ class OFPEchoRequest(MsgBase):
     """
     Echo request message
 
-    This message is handled by the Ryu framework, so the Ryu application
+    This message is handled by the OSKen framework, so the OSKen application
     do not need to process this typically.
 
     ========== =========================================================
@@ -262,7 +270,7 @@ class OFPErrorMsg(MsgBase):
         super(OFPErrorMsg, self).__init__(datapath)
         self.type = type_
         self.code = code
-        if isinstance(data, six.string_types):
+        if isinstance(data, str):
             data = data.encode('ascii')
         self.data = data
         if self.type == ofproto.OFPET_EXPERIMENTER:
@@ -271,7 +279,7 @@ class OFPErrorMsg(MsgBase):
 
     @classmethod
     def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
-        type_, = struct.unpack_from('!H', six.binary_type(buf),
+        type_, = struct.unpack_from('!H', bytes(buf),
                                     ofproto.OFP_HEADER_SIZE)
         msg = super(OFPErrorMsg, cls).parser(datapath, version, msg_type,
                                              msg_len, xid, buf)
@@ -329,7 +337,7 @@ class OFPEchoReply(MsgBase):
     """
     Echo reply message
 
-    This message is handled by the Ryu framework, so the Ryu application
+    This message is handled by the OSKen framework, so the OSKen application
     do not need to process this typically.
 
     ========== =========================================================
@@ -377,7 +385,7 @@ class OFPFeaturesRequest(MsgBase):
     The controller sends a feature request to the switch upon session
     establishment.
 
-    This message is handled by the Ryu framework, so the Ryu application
+    This message is handled by the OSKen framework, so the OSKen application
     do not need to process this typically.
 
     Example::
@@ -407,6 +415,7 @@ class OFPExperimenter(MsgBase):
     data          Experimenter defined arbitrary additional data
     ============= =========================================================
     """
+    _subtypes = {}
 
     def __init__(self, datapath, experimenter=None, exp_type=None, data=None):
         super(OFPExperimenter, self).__init__(datapath)
@@ -423,6 +432,13 @@ class OFPExperimenter(MsgBase):
             ofproto.OFP_EXPERIMENTER_HEADER_PACK_STR, msg.buf,
             ofproto.OFP_HEADER_SIZE)
         msg.data = msg.buf[ofproto.OFP_EXPERIMENTER_HEADER_SIZE:]
+        if (msg.experimenter, msg.exp_type) in cls._subtypes:
+            new_msg = cls._subtypes[
+                (msg.experimenter, msg.exp_type)].parser_subtype(msg)
+            new_msg.set_headers(msg.version, msg.msg_type, msg.msg_len,
+                                msg.xid)
+            new_msg.set_buf(msg.buf)
+            return new_msg
 
         return msg
 
@@ -443,7 +459,7 @@ class OFPSwitchFeatures(MsgBase):
     The switch responds with a features reply message to a features
     request.
 
-    This message is handled by the Ryu framework, so the Ryu application
+    This message is handled by the OSKen framework, so the OSKen application
     do not need to process this typically.
 
     Example::
@@ -884,6 +900,8 @@ class OFPPropBase(StringifyMixin):
     @classmethod
     def parse(cls, buf):
         (type_, length) = struct.unpack_from(cls._PACK_STR, buf, 0)
+        if not length:
+            raise ValueError
         rest = buf[utils.round_up(length, 8):]
         try:
             subcls = cls._TYPES[type_]
@@ -1361,7 +1379,7 @@ class OFPPort(StringifyMixin):
     hw_addr    MAC address for the port.
     name       Null-terminated string containing a human-readable name
                for the interface.
-    config     Bitmap of port configration flags.
+    config     Bitmap of port configuration flags.
 
                | OFPPC_PORT_DOWN
                | OFPPC_NO_RECV
@@ -1644,7 +1662,7 @@ class OFPMultipartReply(MsgBase):
     @classmethod
     def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
         type_, flags = struct.unpack_from(
-            ofproto.OFP_MULTIPART_REPLY_PACK_STR, six.binary_type(buf),
+            ofproto.OFP_MULTIPART_REPLY_PACK_STR, bytes(buf),
             ofproto.OFP_HEADER_SIZE)
         stats_type_cls = cls._STATS_MSG_TYPES.get(type_)
         msg = super(OFPMultipartReply, stats_type_cls).parser(
@@ -1823,7 +1841,7 @@ class OFPInstructionId(StringifyMixin):
     @classmethod
     def parse(cls, buf):
         (type_, len_,) = struct.unpack_from(cls._PACK_STR,
-                                            six.binary_type(buf), 0)
+                                            bytes(buf), 0)
         rest = buf[len_:]
         return cls(type_=type_, len_=len_), rest
 
@@ -1875,7 +1893,7 @@ class OFPActionId(StringifyMixin):
     @classmethod
     def parse(cls, buf):
         (type_, len_,) = struct.unpack_from(cls._PACK_STR,
-                                            six.binary_type(buf), 0)
+                                            bytes(buf), 0)
         rest = buf[len_:]
         return cls(type_=type_, len_=len_), rest
 
@@ -1931,7 +1949,7 @@ class OFPTableFeaturePropNextTables(OFPTableFeatureProp):
         ids = []
         while rest:
             (i,) = struct.unpack_from(cls._TABLE_ID_PACK_STR,
-                                      six.binary_type(rest), 0)
+                                      bytes(rest), 0)
             rest = rest[struct.calcsize(cls._TABLE_ID_PACK_STR):]
             ids.append(i)
         return cls(table_ids=ids)
@@ -1982,7 +2000,7 @@ class OFPOxmId(StringifyMixin):
 
     @classmethod
     def parse(cls, buf):
-        (oxm,) = struct.unpack_from(cls._PACK_STR, six.binary_type(buf), 0)
+        (oxm,) = struct.unpack_from(cls._PACK_STR, bytes(buf), 0)
         # oxm (32 bit) == class (16) | field (7) | hasmask (1) | length (8)
         # in case of experimenter OXMs, another 32 bit value
         # (experimenter id) follows.
@@ -1993,7 +2011,7 @@ class OFPOxmId(StringifyMixin):
         class_ = oxm >> (7 + 1 + 8)
         if class_ == ofproto.OFPXMC_EXPERIMENTER:
             (exp_id,) = struct.unpack_from(cls._EXPERIMENTER_ID_PACK_STR,
-                                           six.binary_type(rest), 0)
+                                           bytes(rest), 0)
             rest = rest[struct.calcsize(cls._EXPERIMENTER_ID_PACK_STR):]
             subcls = OFPExperimenterOxmId
             return subcls(type_=type_, exp_id=exp_id, hasmask=hasmask,
@@ -5032,7 +5050,7 @@ class OFPActionSetField(OFPAction):
         assert len(kwargs) == 1
         key = list(kwargs.keys())[0]
         value = kwargs[key]
-        assert isinstance(key, (str, six.text_type))
+        assert isinstance(key, (str, str))
         assert not isinstance(value, tuple)  # no mask
         self.key = key
         self.value = value
@@ -5831,6 +5849,171 @@ class OFPBundleAddMsg(MsgInMsgBase):
 
         # Finish
         self.buf += tail_buf
+
+
+@_register_exp_type(ofproto_common.NX_EXPERIMENTER_ID,
+                    nicira_ext.NXT_SET_PACKET_IN_FORMAT)
+class NXTSetPacketInFormatMsg(OFPExperimenter):
+    def __init__(self, datapath, packet_in_format):
+        super(NXTSetPacketInFormatMsg, self).__init__(
+            datapath, ofproto_common.NX_EXPERIMENTER_ID,
+            nicira_ext.NXT_SET_PACKET_IN_FORMAT)
+        self.packet_in_format = packet_in_format
+
+    def _serialize_body(self):
+        msg_pack_into(ofproto.OFP_EXPERIMENTER_HEADER_PACK_STR,
+                      self.buf, ofproto.OFP_HEADER_SIZE,
+                      self.experimenter, self.exp_type)
+        msg_pack_into(nicira_ext.NX_SET_PACKET_IN_FORMAT_PACK_STR,
+                      self.buf, ofproto.OFP_EXPERIMENTER_HEADER_SIZE,
+                      self.packet_in_format)
+
+    @classmethod
+    def parser_subtype(cls, super_msg):
+        packet_in_format = struct.unpack_from(
+            nicira_ext.NX_SET_PACKET_IN_FORMAT_PACK_STR, super_msg.data)[0]
+        msg = cls(super_msg.datapath, packet_in_format)
+        msg.properties = []
+        return msg
+
+
+@_register_exp_type(ofproto_common.NX_EXPERIMENTER_ID,
+                    nicira_ext.NXT_PACKET_IN2)
+class NXTPacketIn2(OFPExperimenter):
+    def __init__(self, datapath, properties=None):
+        super(NXTPacketIn2, self).__init__(
+            datapath, ofproto_common.NX_EXPERIMENTER_ID,
+            nicira_ext.NXT_PACKET_IN2)
+        self.properties = properties or []
+        self.data = None
+        self.total_len = None
+        self.buffer_id = None
+        self.table_id = None
+        self.cookie = None
+        self.reason = None
+        self.metadata = None
+        self.userdata = None
+        self.continuation = None
+
+    def _serialize_body(self):
+        bin_props = bytearray()
+        for p in self.properties:
+            bin_props += p.serialize()
+
+        msg_pack_into(ofproto.OFP_EXPERIMENTER_HEADER_PACK_STR,
+                      self.buf, ofproto.OFP_HEADER_SIZE,
+                      self.experimenter, self.exp_type)
+        self.buf += bin_props
+
+    @classmethod
+    def parser_subtype(cls, super_msg):
+        msg = cls(super_msg.datapath)
+        rest = super_msg.data
+        while rest:
+            p, rest = NXTPacketIn2Prop.parse(rest)
+            msg.properties.append(p)
+            msg._parse_property(p)
+
+        return msg
+
+    def _parse_property(self, p):
+        if p.type == nicira_ext.NXPINT_PACKET:
+            self.data = p.data
+            # Note: here total_len is length of packet but not msg
+            self.total_len = p.length
+        elif p.type == nicira_ext.NXPINT_FULL_LEN:
+            self.total_len = struct.unpack_from('!I', p.data)[0]
+        elif p.type == nicira_ext.NXPINT_BUFFER_ID:
+            self.buffer_id = struct.unpack_from('!I', p.data)[0]
+        elif p.type == nicira_ext.NXPINT_TABLE_ID:
+            self.table_id = struct.unpack_from('B', p.data)[0]
+        elif p.type == nicira_ext.NXPINT_COOKIE:
+            self.cookie = struct.unpack_from('!Q', p.data)[0]
+        elif p.type == nicira_ext.NXPINT_REASON:
+            self.reason = struct.unpack_from('!B', p.data)[0]
+        elif p.type == nicira_ext.NXPINT_METADATA:
+            self.metadata = p.data
+        elif p.type == nicira_ext.NXPINT_USERDATA:
+            self.userdata = p.data
+        elif p.type == nicira_ext.NXPINT_CONTINUATION:
+            self.continuation = p.data
+
+
+class NXTPacketIn2Prop(OFPPropBase):
+    _TYPES = {}
+    _PROP_TYPE = None
+
+    def __init__(self, type_=None, length=None, data=None):
+        super(NXTPacketIn2Prop, self).__init__(type_, length)
+        self.data = data
+
+    @classmethod
+    def parse(cls, buf):
+        (type_, length) = struct.unpack_from(cls._PACK_STR, buf, 0)
+        if not length:
+            raise ValueError
+        rest = buf[utils.round_up(length, 8):]
+        try:
+            subcls = cls._TYPES[type_]
+        except KeyError:
+            subcls = OFPPropUnknown
+        prop = subcls.sub_parser(buf, type, length)
+        prop.type = type_
+        prop.length = length
+        return prop, rest
+
+    def serialize_body(self):
+        return self.data
+
+    @classmethod
+    def sub_parser(cls, buf, type, length):
+        p = cls(type, length - 4, buf[4:length])
+        return p
+
+
+@NXTPacketIn2Prop.register_type(nicira_ext.NXPINT_PACKET)
+class NXTPacketIn2PropPacket(NXTPacketIn2Prop):
+    _PROP_TYPE = nicira_ext.NXPINT_PACKET
+
+
+@NXTPacketIn2Prop.register_type(nicira_ext.NXPINT_FULL_LEN)
+class NXTPacketIn2PropFullLen(NXTPacketIn2Prop):
+    _PROP_TYPE = nicira_ext.NXPINT_FULL_LEN
+
+
+@NXTPacketIn2Prop.register_type(nicira_ext.NXPINT_BUFFER_ID)
+class NXTPacketIn2PropBufferId(NXTPacketIn2Prop):
+    _PROP_TYPE = nicira_ext.NXPINT_BUFFER_ID
+
+
+@NXTPacketIn2Prop.register_type(nicira_ext.NXPINT_TABLE_ID)
+class NXTPacketIn2PropTableId(NXTPacketIn2Prop):
+    _PROP_TYPE = nicira_ext.NXPINT_TABLE_ID
+
+
+@NXTPacketIn2Prop.register_type(nicira_ext.NXPINT_COOKIE)
+class NXTPacketIn2PropCookie(NXTPacketIn2Prop):
+    _PROP_TYPE = nicira_ext.NXPINT_COOKIE
+
+
+@NXTPacketIn2Prop.register_type(nicira_ext.NXPINT_REASON)
+class NXTPacketIn2PropReason(NXTPacketIn2Prop):
+    _PROP_TYPE = nicira_ext.NXPINT_REASON
+
+
+@NXTPacketIn2Prop.register_type(nicira_ext.NXPINT_METADATA)
+class NXTPacketIn2PropMetadata(NXTPacketIn2Prop):
+    _PROP_TYPE = nicira_ext.NXPINT_METADATA
+
+
+@NXTPacketIn2Prop.register_type(nicira_ext.NXPINT_USERDATA)
+class NXTPacketIn2PropUserData(NXTPacketIn2Prop):
+    _PROP_TYPE = nicira_ext.NXPINT_USERDATA
+
+
+@NXTPacketIn2Prop.register_type(nicira_ext.NXPINT_CONTINUATION)
+class NXTPacketIn2PropContinuation(NXTPacketIn2Prop):
+    _PROP_TYPE = nicira_ext.NXPINT_CONTINUATION
 
 
 nx_actions.generate(

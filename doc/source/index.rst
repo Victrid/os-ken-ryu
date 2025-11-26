@@ -1,28 +1,28 @@
-.. ryu documentation master file, created by
-   sphinx-quickstart on Mon Dec  5 15:38:48 2011.
+.. os-ken documentation master file, created by
+   sphinx-quickstart on Tue Jul  9 22:26:36 2013.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-************************************************
-Welcome to RYU the Network Operating System(NOS)
-************************************************
-
-Contents:
+======================================
+Welcome to the documentation of ryu
+======================================
 
 .. toctree::
    :maxdepth: 2
 
-   getting_started.rst
-   developing.rst
-   configuration.rst
-   tests.rst
-   snort_integrate.rst
-   app.rst
+   readme
+   library/index
+   contributor/index
+   configuration/index
+   user/index
+   admin/index
+   reference/index
+   archive
 
-Indices and tables
-==================
+.. only:: html
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   .. rubric:: Indices and tables
 
+   * :ref:`genindex`
+   * :ref:`modindex`
+   * :ref:`search`
